@@ -42,22 +42,27 @@ const getCookie = (name: string): string | null => {
 
 export const saveData = (key: string, value: string): void => {
   const prefixed = PREFIX + key;
-  if (!trySetLS(prefixed, value)) {
-    setCookie(prefixed, value);
-  }
+  trySetLS(prefixed, value);
+  // Cookie fallback disabled: we want to confirm localStorage works on device first
+  // if (!trySetLS(prefixed, value)) {
+  //   setCookie(prefixed, value);
+  // }
 };
 
 export const loadData = (key: string): string | null => {
   const prefixed = PREFIX + key;
-  const ls = tryGetLS(prefixed);
-  if (ls !== null) return ls;
-  return getCookie(prefixed);
+  return tryGetLS(prefixed);
+  // Cookie fallback disabled: we want to confirm localStorage works on device first
+  // const ls = tryGetLS(prefixed);
+  // if (ls !== null) return ls;
+  // return getCookie(prefixed);
 };
 
 export const removeData = (key: string): void => {
   const prefixed = PREFIX + key;
   try { localStorage.removeItem(prefixed); } catch { /* noop */ }
-  try { document.cookie = `${prefixed}=; path=/; max-age=0`; } catch { /* noop */ }
+  // Cookie fallback disabled: we want to confirm localStorage works on device first
+  // try { document.cookie = `${prefixed}=; path=/; max-age=0`; } catch { /* noop */ }
 };
 
 export const saveState = (state: SavedState): void => {
