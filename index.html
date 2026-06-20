@@ -11,7 +11,16 @@
     <main class="shell" id="top">
       <header class="topbar" aria-label="Status bar">
         <div class="brand">ZO 3DS</div>
-        <div class="status" id="api-status">api key loading…</div>
+        <button
+          class="status status-button"
+          id="api-status"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="qr-modal"
+          aria-expanded="false"
+        >
+          api key loading…
+        </button>
       </header>
 
       <section class="screen hero" aria-labelledby="hero-title">
@@ -120,6 +129,38 @@
         </p>
       </footer>
     </main>
+
+    <div class="modal" id="qr-modal" hidden>
+      <button class="modal-backdrop" id="qr-backdrop" type="button" aria-label="Close QR dialog"></button>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+        <div class="panel-head">
+          <h2 id="qr-title">Session QR</h2>
+          <button class="panel-link dialog-close" id="qr-close" type="button">close</button>
+        </div>
+        <p class="dialog-copy" id="qr-copy">
+          Scan this link on another device to open Zo 3DS with the key already attached.
+        </p>
+        <div class="dialog-setup" id="qr-setup">
+          <label class="field-label" for="qr-key-input">API key</label>
+          <input
+            class="field-input"
+            id="qr-key-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="paste the api key"
+          />
+          <button class="action-button" id="qr-build" type="button">Build QR</button>
+        </div>
+        <div class="dialog-result" id="qr-result" hidden>
+          <img class="qr-image" id="qr-image" alt="QR code for Zo 3DS session link" />
+          <a class="qr-link" id="qr-link" href="#" target="_blank" rel="noreferrer">open QR link</a>
+          <p class="qr-value" id="qr-value"></p>
+        </div>
+      </section>
+    </div>
+
     <script>
       (function () {
         function getQueryParam(name) {
@@ -147,12 +188,140 @@
 
         var apiKey = getQueryParam("key");
         var status = document.getElementById("api-status");
+        var modal = document.getElementById("qr-modal");
+        var backdrop = document.getElementById("qr-backdrop");
+        var closeButton = document.getElementById("qr-close");
+        var buildButton = document.getElementById("qr-build");
+        var keyInput = document.getElementById("qr-key-input");
+        var setup = document.getElementById("qr-setup");
+        var result = document.getElementById("qr-result");
+        var image = document.getElementById("qr-image");
+        var link = document.getElementById("qr-link");
+        var value = document.getElementById("qr-value");
+        var copy = document.getElementById("qr-copy");
+        var open = false;
 
         window.ZO_API_KEY = apiKey;
 
         if (status) {
-          status.innerHTML = apiKey ? "api key set" : "api key missing";
+          status.innerHTML = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
         }
+
+        function getSessionUrl() {
+          var base = window.location.href.split("?")[0];
+          var hash = window.location.hash || "";
+
+          return base + "?key=" + encodeURIComponent(apiKey || "") + hash;
+        }
+
+        function renderQr() {
+          var sessionUrl = getSessionUrl();
+          var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=" +
+            encodeURIComponent(sessionUrl);
+
+          if (link) {
+            link.href = sessionUrl;
+          }
+
+          if (value) {
+            value.innerHTML = sessionUrl;
+          }
+
+          if (image) {
+            image.src = qrUrl;
+          }
+        }
+
+        function syncState() {
+          if (status) {
+            status.innerHTML = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
+            status.setAttribute("aria-expanded", open ? "true" : "false");
+          }
+
+          if (modal) {
+            modal.hidden = !open;
+          }
+
+          if (setup) {
+            setup.hidden = !!apiKey;
+          }
+
+          if (result) {
+            result.hidden = !apiKey;
+          }
+
+          if (copy) {
+            copy.innerHTML = apiKey
+              ? "Scan this link on another device to open Zo 3DS with the key already attached."
+              : "Enter an API key first, then build a QR code for the session link.";
+          }
+
+          if (apiKey) {
+            renderQr();
+          }
+        }
+
+        function openDialog() {
+          open = true;
+          syncState();
+          if (!apiKey && keyInput) {
+            keyInput.focus();
+          }
+        }
+
+        function closeDialog() {
+          open = false;
+          syncState();
+        }
+
+        function buildQr() {
+          var nextKey = keyInput && keyInput.value ? keyInput.value : "";
+
+          if (!nextKey) {
+            if (keyInput) {
+              keyInput.focus();
+            }
+            return;
+          }
+
+          apiKey = nextKey;
+          window.ZO_API_KEY = apiKey;
+          syncState();
+        }
+
+        if (status) {
+          status.onclick = function () {
+            if (open) {
+              closeDialog();
+            } else {
+              openDialog();
+            }
+          };
+        }
+
+        if (backdrop) {
+          backdrop.onclick = closeDialog;
+        }
+
+        if (closeButton) {
+          closeButton.onclick = closeDialog;
+        }
+
+        if (buildButton) {
+          buildButton.onclick = buildQr;
+        }
+
+        if (keyInput) {
+          keyInput.onkeydown = function (event) {
+            var keyCode = event && (event.keyCode || event.which) ? (event.keyCode || event.which) : 0;
+
+            if (keyCode === 13) {
+              buildQr();
+            }
+          };
+        }
+
+        syncState();
       })();
     </script>
   </body>
