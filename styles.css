@@ -1,0 +1,93 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #10151d;
+  color: #f4f7fb;
+  font: 16px/1.4 Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shell {
+  padding: 12px;
+}
+
+.topbar,
+.menu,
+.panel {
+  border: 2px solid #2c3b52;
+  background: #16202c;
+}
+
+.topbar {
+  display: table;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.brand,
+.status {
+  display: table-cell;
+  vertical-align: middle;
+  font-weight: bold;
+}
+
+.status {
+  text-align: right;
+  color: #8bd3ff;
+}
+
+.hero,
+.panel {
+  margin-bottom: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.hero h1,
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.hero p,
+.panel p,
+.panel li {
+  margin: 0;
+  color: #d3dce8;
+}
+
+.menu {
+  display: table;
+  width: 100%;
+  margin-bottom: 12px;
+  table-layout: fixed;
+}
+
+.tile {
+  display: table-cell;
+  padding: 12px 8px;
+  border-right: 1px solid #2c3b52;
+  text-align: center;
+  font-weight: bold;
+}
+
+.tile:last-child {
+  border-right: 0;
+}
+
+.tile.active {
+  background: #233247;
+  color: #8bd3ff;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 20px;
+}
