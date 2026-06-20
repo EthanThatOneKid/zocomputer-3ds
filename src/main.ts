@@ -69,7 +69,9 @@ const getQueryParam = (name: string): string => {
   return "";
 };
 
-apiKey = getQueryParam("key");
+const normalizeApiKey = (value: string): string => value.replace(/^Bearer\s+/i, "").trim();
+
+apiKey = normalizeApiKey(getQueryParam("key"));
 window.ZO_API_KEY = apiKey;
 
 /**
@@ -551,7 +553,7 @@ const closeDialog = () => {
 };
 
 const buildQr = () => {
-  const nextKey = keyInput?.value || "";
+  const nextKey = normalizeApiKey(keyInput?.value || "");
 
   if (!nextKey) {
     keyInput?.focus();

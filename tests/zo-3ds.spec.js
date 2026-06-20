@@ -49,3 +49,16 @@ test('hydrates the key from the URL on load', async ({ page }) => {
   await expect(page.locator('#qr-link')).toHaveAttribute('href', new RegExp(`key=${encodeURIComponent(key)}`));
   expect(await page.evaluate(() => window.ZO_API_KEY)).toBe(key);
 });
+
+test('normalizes pasted bearer tokens before saving the key', async ({ page }) => {
+  const key = 'normalized-key';
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /api key missing/i }).click();
+  await page.locator('#qr-key-input').fill(`  Bearer ${key}  `);
+  await page.getByRole('button', { name: 'Build QR' }).click();
+
+  await expect(page.getByText('api key set · tap for QR')).toBeVisible();
+  await expect(page.locator('#qr-link')).toHaveAttribute('href', new RegExp(`key=${encodeURIComponent(key)}`));
+  expect(await page.evaluate(() => window.ZO_API_KEY)).toBe(key);
+});
