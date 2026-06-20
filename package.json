@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@vitejs/plugin-legacy": "^6.0.0",
     "terser": "^5.48.0",
     "typescript": "^6.0.3",

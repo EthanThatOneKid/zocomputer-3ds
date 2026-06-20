@@ -604,8 +604,12 @@ const handleRoute = () => {
 window.onhashchange = handleRoute;
 
 // Initialize
-if (apiKey) {
-  restoreState();
+try {
+  if (apiKey) {
+    restoreState();
+  }
+} catch (e) {
+  console.error('Failed to restore saved state:', e);
 }
 syncState();
 handleRoute();
