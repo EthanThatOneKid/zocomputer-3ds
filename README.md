@@ -15,6 +15,13 @@ Keep the experience readable, fast, and friendly to 3DS browser limits.
 - A clickable status bar that opens a QR session dialog
 - ES3-safe browser JS that reads `?key=...` and builds a local QR SVG
 - A fallback prompt for entering an API key before QR generation
+- Playwright browser tests that verify the chat lock, QR flow, and URL key hydration
+
+## Testing
+
+```bash
+npm test
+```
 
 ## Development
 

@@ -78,19 +78,21 @@ window.ZO_API_KEY = apiKey;
  * NOTE: Browsers enforce CORS policies, but the Zo API domain does not allow
  * requests originating from localhost:5173. To bypass this during local development, 
  * we route calls to '/zo-api', which Vite's proxy forwards to 'https://api.zo.computer'.
- * On non-local production or real 3DS console viewports, we directly hit the main API
- * because legacy 3DS NetFront does not enforce modern CORS rules.
+ * On real 3DS console viewports, we directly hit the main API because legacy NetFront
+ * does not enforce modern CORS rules. Everywhere else, we go through the Zo Space
+ * proxy route and pass the upstream path through ?path=.
  */
 const getApiBaseUrl = (): string => {
   const host = window.location.hostname;
   if (host === 'localhost' || host === '127.0.0.1') {
     return `${window.location.origin}/zo-api`;
   }
-  // 3DS NetFront doesn't enforce CORS; modern browsers need a proxy.
-  // Zo Space API route at etok.zo.space/zo-proxy forwards to api.zo.computer
-  // and adds CORS headers. See proxy/zo-proxy.zopack.md.
+  const isThreeDs = /(?:Nintendo|New Nintendo|3DS)/i.test(window.navigator.userAgent);
+  if (isThreeDs) return 'https://api.zo.computer';
+  // 3DS NetFront doesn't enforce CORS; modern browsers need the Zo Space proxy.
+  // The proxy forwards upstream paths via ?path= and adds CORS headers.
   if (host.includes('github.io') || host.includes('pages.dev')) {
-    return 'https://etok.zo.space/zo-proxy';
+    return 'https://etok.zo.space/zo-proxy?path=';
   }
   return 'https://api.zo.computer';
 };
