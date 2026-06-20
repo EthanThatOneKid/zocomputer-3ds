@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zo Computer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell" id="top">
+      <header class="topbar" aria-label="Status bar">
+        <div class="brand">ZO 3DS</div>
+        <button
+          class="status status-button"
+          id="api-status"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="qr-modal"
+          aria-expanded="false"
+        >
+          api key loading…
+        </button>
+      </header>
+
+      <nav class="menu" aria-label="Primary navigation" id="primary-menu">
+        <a class="tile active" href="#home">Home</a>
+        <a class="tile" href="#chat">Chat</a>
+        <a class="tile" href="#tasks">Tasks</a>
+        <a class="tile" href="#tools">Tools</a>
+      </nav>
+
+      <section class="panel" id="home" aria-labelledby="home-title">
+        <div class="panel-head">
+          <h2 id="home-title">Today</h2>
+          <span class="panel-meta">ready for quick checks</span>
+        </div>
+        <ul class="checklist">
+          <li>Quick status at a glance</li>
+          <li>Simple navigation with clear labels</li>
+          <li>Readable layout for small screens</li>
+        </ul>
+      </section>
+
+      <section class="panel" id="chat" aria-labelledby="chat-title">
+        <div class="panel-head">
+          <h2 id="chat-title">Chat</h2>
+          <a class="panel-link" href="#tools">open tools</a>
+        </div>
+        <div class="message-list">
+          <article class="message incoming">
+            <p>Need something done?</p>
+            <span>last ping · now</span>
+          </article>
+          <article class="message outgoing">
+            <p>Keep it simple and direct.</p>
+            <span>reply · saved</span>
+          </article>
+        </div>
+        <div class="composer" aria-label="Chat composer">
+          <label class="composer-label" for="chat-message-input">Message</label>
+          <input
+            class="composer-input"
+            id="chat-message-input"
+            type="text"
+            placeholder="enter a message"
+            disabled
+          />
+          <button class="composer-button" id="chat-send" type="button" disabled>Send</button>
+          <p class="composer-hint" id="chat-hint">Add a key to unlock chat input.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="tasks" aria-labelledby="tasks-title">
+        <div class="panel-head">
+          <h2 id="tasks-title">Tasks</h2>
+          <span class="panel-meta">3 open</span>
+        </div>
+        <ul class="task-list">
+          <li><span class="dot done"></span>Confirm the day’s priority</li>
+          <li><span class="dot"></span>Review one important thread</li>
+          <li><span class="dot"></span>Ship the next small thing</li>
+        </ul>
+      </section>
+
+      <section class="panel" id="tools" aria-labelledby="tools-title">
+        <div class="panel-head">
+          <h2 id="tools-title">Tools</h2>
+          <span class="panel-meta">fast access</span>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="#chat">
+            <strong>Inbox</strong>
+            <span>scan recent messages</span>
+          </a>
+          <a class="tool-card" href="#tasks">
+            <strong>Planner</strong>
+            <span>see what matters next</span>
+          </a>
+          <a class="tool-card" href="#home">
+            <strong>Home</strong>
+            <span>return to the summary</span>
+          </a>
+          <a class="tool-card" href="#top">
+            <strong>System</strong>
+            <span>check device status</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Built for handheld browsing. Minimal chrome, large targets, fast load.
+        </p>
+      </footer>
+    </main>
+
+    <div class="modal" id="qr-modal" hidden>
+      <button class="modal-backdrop" id="qr-backdrop" type="button" aria-label="Close QR dialog"></button>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+        <div class="panel-head">
+          <h2 id="qr-title">Session QR</h2>
+          <button class="panel-link dialog-close" id="qr-close" type="button">close</button>
+        </div>
+        <p class="dialog-copy" id="qr-copy">
+          Scan this link on another device to open Zo 3DS with the key already attached.
+        </p>
+        <div class="dialog-setup" id="qr-setup">
+          <label class="field-label" for="qr-key-input">API key</label>
+          <input
+            class="field-input"
+            id="qr-key-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="paste the api key"
+          />
+          <button class="action-button" id="qr-build" type="button">Build QR</button>
+        </div>
+        <div class="dialog-result" id="qr-result" hidden>
+          <svg class="qr-image" id="qr-image" viewBox="0 0 1 1" aria-label="QR code for Zo 3DS session link" role="img"></svg>
+          <a class="qr-link" id="qr-link" href="#" target="_blank" rel="noreferrer">open QR link</a>
+          <p class="qr-value" id="qr-value"></p>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="../src/main.ts"></script>
+  </body>
+</html>

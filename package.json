@@ -1,0 +1,17 @@
+{
+  "name": "zocomputer-3ds",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-legacy": "^8.0.2",
+    "terser": "^5.48.0",
+    "typescript": "^6.0.3",
+    "vite": "^6.0.3"
+  }
+}

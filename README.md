@@ -18,10 +18,10 @@ Keep the experience readable, fast, and friendly to 3DS browser limits.
 
 ## Development
 
-Run the development server locally in watch mode using Vite:
+Run the development server locally in watch mode:
 
 ```bash
-npx vite
+npm run dev
 ```
 
 ## References
