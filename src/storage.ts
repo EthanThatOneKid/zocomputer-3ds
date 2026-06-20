@@ -1,3 +1,5 @@
+import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
+
 const PREFIX = 'zo3ds_';
 
 export interface SavedMessage {
@@ -65,16 +67,20 @@ export const removeData = (key: string): void => {
   // try { document.cookie = `${prefixed}=; path=/; max-age=0`; } catch { /* noop */ }
 };
 
+const C1 = 'c1:';
+
 export const saveState = (state: SavedState): void => {
   const json = JSON.stringify(state);
-  saveData('state', json);
+  saveData('state', C1 + compressToUTF16(json));
 };
 
 export const loadState = (): SavedState | null => {
   const raw = loadData('state');
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as SavedState;
+    const decompressed = raw.startsWith(C1) ? decompressFromUTF16(raw.substring(C1.length)) : raw;
+    if (decompressed == null) return null;
+    const parsed = JSON.parse(decompressed) as SavedState;
     if (Array.isArray(parsed.messages)) return parsed;
   } catch { /* noop */ }
   return null;
@@ -82,4 +88,17 @@ export const loadState = (): SavedState | null => {
 
 export const clearState = (): void => {
   removeData('state');
+};
+
+export const clearAllData = (): void => {
+  const toRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(PREFIX)) {
+      toRemove.push(key);
+    }
+  }
+  for (const key of toRemove) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+  }
 };

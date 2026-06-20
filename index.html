@@ -27,6 +27,7 @@
         <a class="tile active" href="#chat">Chat</a>
         <a class="tile" href="#models">Models</a>
         <a class="tile" href="#personas">Personas</a>
+        <a class="tile" href="#settings">Settings</a>
       </nav>
 
       <section class="panel" id="chat" aria-labelledby="chat-title">
@@ -74,6 +75,21 @@
         </div>
         <div class="list-placeholder" id="personas-placeholder">Add a key to view personas.</div>
         <div class="card-grid" id="personas-list"></div>
+      </section>
+
+      <section class="panel" id="settings" aria-labelledby="settings-title">
+        <div class="panel-head">
+          <h2 id="settings-title">Settings</h2>
+          <span class="panel-meta" id="settings-meta">&nbsp;</span>
+        </div>
+        <p class="settings-desc">
+          If things get messy, you can clear all saved data stored on this device
+          — messages, model selection, persona, and conversation history.
+        </p>
+        <button class="danger-button" id="settings-clear-btn" type="button">
+          Clear Site Data
+        </button>
+        <p class="settings-status" id="settings-status">&nbsp;</p>
       </section>
 
       <footer class="footer">

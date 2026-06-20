@@ -1,6 +1,6 @@
 import { qrcodegen } from './qrcodegen';
 import { createClient, zoAsk, getAvailableModels, getAvailablePersonas } from 'zocomputer';
-import { saveState, loadState, clearState, type SavedMessage } from './storage';
+import { saveState, loadState, clearState, clearAllData, type SavedMessage } from './storage';
 
 declare global {
   interface Window {
@@ -50,6 +50,9 @@ const personasMetaEl = document.getElementById("personas-meta") as HTMLSpanEleme
 const chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
 const chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
 
+const settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
+const settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+
 /**
  * Parses queries out of the search parameters (e.g. `?key=...`)
  */
@@ -79,8 +82,17 @@ window.ZO_API_KEY = apiKey;
  * because legacy 3DS NetFront does not enforce modern CORS rules.
  */
 const getApiBaseUrl = (): string => {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return isLocal ? `${window.location.origin}/zo-api` : 'https://api.zo.computer';
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `${window.location.origin}/zo-api`;
+  }
+  // 3DS NetFront doesn't enforce CORS; modern browsers need a proxy.
+  // Zo Space API route at etok.zo.space/zo-proxy forwards to api.zo.computer
+  // and adds CORS headers. See proxy/zo-proxy.zopack.md.
+  if (host.includes('github.io') || host.includes('pages.dev')) {
+    return 'https://etok.zo.space/zo-proxy';
+  }
+  return 'https://api.zo.computer';
 };
 
 const getSessionUrl = (): string => {
@@ -150,6 +162,16 @@ const resetDataViews = () => {
   if (personasMetaEl) personasMetaEl.textContent = "0 active";
 
   updateConfigBar();
+};
+
+const clearSiteData = () => {
+  if (!confirm("This will permanently delete all saved messages, model selection, persona, and conversation history. Continue?")) {
+    return;
+  }
+  clearAllData();
+  clearState();
+  resetDataViews();
+  if (settingsStatus) settingsStatus.textContent = "All site data cleared.";
 };
 
 const renderModels = () => {
@@ -577,9 +599,13 @@ if (chatInput) {
   };
 }
 
+if (settingsClearBtn) {
+  settingsClearBtn.onclick = clearSiteData;
+}
+
 const handleRoute = () => {
   let hash = window.location.hash || "#chat";
-  const panels = ["chat", "models", "personas"];
+  const panels = ["chat", "models", "personas", "settings"];
   if (!panels.includes(hash.substring(1))) {
     hash = "#chat";
   }

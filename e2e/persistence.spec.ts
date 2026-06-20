@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
+import lz from 'lz-string';
+
+const { compressToUTF16, decompressFromUTF16 } = lz;
 
 const TEST_KEY = 'zo_sk_testkey';
+const C1 = 'c1:';
 const STORAGE_KEY = 'zo3ds_state';
 
 const stateWith = (overrides: Record<string, unknown>) => ({
@@ -15,10 +19,21 @@ const stateWith = (overrides: Record<string, unknown>) => ({
 });
 
 const injectState = async (page: any, state: Record<string, unknown>) => {
+  const raw = JSON.stringify(state);
+  const compressed = C1 + compressToUTF16(raw);
   await page.evaluate(
-    ({ key, value }) => localStorage.setItem(key, JSON.stringify(value)),
-    { key: STORAGE_KEY, value: state }
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key: STORAGE_KEY, value: compressed }
   );
+};
+
+const readStoredState = async (page: any): Promise<any> => {
+  const raw = await page.evaluate((key: string) => localStorage.getItem(key), STORAGE_KEY);
+  if (!raw) return null;
+  if (raw.startsWith(C1)) {
+    return JSON.parse(decompressFromUTF16(raw.substring(C1.length))!);
+  }
+  return JSON.parse(raw);
 };
 
 test.describe('persistence', () => {
@@ -110,10 +125,8 @@ test.describe('persistence', () => {
     await page.goto(`/?key=${TEST_KEY}`);
     await page.waitForTimeout(500);
 
-    const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
-    expect(stored).not.toBeNull();
-
-    const parsed = JSON.parse(stored!);
+    const parsed = await readStoredState(page);
+    expect(parsed).not.toBeNull();
     expect(parsed.conversationId).toBe('conv_abc123');
   });
 
@@ -143,6 +156,61 @@ test.describe('persistence', () => {
     expect(storedAfter).toBeNull();
   });
 
+  test('settings clear button removes all saved state after confirmation', async ({ page }) => {
+    await page.goto('/');
+    await injectState(page, stateWith({}));
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(500);
+
+    // Confirm state was loaded
+    let stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stored).not.toBeNull();
+
+    // Switch to Settings tab via in-page nav (no reload)
+    await page.locator('a[href="#settings"]').click();
+    await page.waitForTimeout(300);
+
+    page.on('dialog', (dialog) => dialog.accept());
+    await page.locator('#settings-clear-btn').click();
+    await page.waitForTimeout(500);
+
+    // localStorage should be empty for our prefix
+    stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stored).toBeNull();
+
+    // Status message should show
+    const status = page.locator('#settings-status');
+    await expect(status).toHaveText('All site data cleared.');
+
+    // Switch to chat via in-page nav — should show no messages (placeholder also cleared)
+    await page.locator('a[href="#chat"]').click();
+    await page.waitForTimeout(300);
+    const messages = page.locator('#chat-message-list .message');
+    await expect(messages).toHaveCount(0);
+  });
+
+  test('settings clear button does nothing when confirm is dismissed', async ({ page }) => {
+    await page.goto('/');
+    await injectState(page, stateWith({}));
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(500);
+
+    let stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stored).not.toBeNull();
+
+    // Switch to Settings tab via in-page nav (no reload)
+    await page.locator('a[href="#settings"]').click();
+    await page.waitForTimeout(300);
+
+    page.on('dialog', (dialog) => dialog.dismiss());
+    await page.locator('#settings-clear-btn').click();
+    await page.waitForTimeout(500);
+
+    // State should still be intact
+    stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stored).not.toBeNull();
+  });
+
   test('sends message and persists outgoing text to localStorage', async ({ page }) => {
     await page.goto(`/?key=${TEST_KEY}`);
     await page.waitForTimeout(500);
@@ -162,10 +230,8 @@ test.describe('persistence', () => {
     await expect(outgoing).toContainText('Hello from test');
 
     // Should be saved to localStorage — find the outgoing message
-    const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
-    expect(stored).not.toBeNull();
-
-    const parsed = JSON.parse(stored!);
+    const parsed = await readStoredState(page);
+    expect(parsed).not.toBeNull();
     expect(parsed.messages.length).toBeGreaterThanOrEqual(1);
 
     const outgoingSaved = parsed.messages.find((m: any) => m.text === 'Hello from test');
