@@ -1,5 +1,6 @@
 import { qrcodegen } from './qrcodegen';
 import { createClient, zoAsk, getAvailableModels, getAvailablePersonas } from 'zocomputer';
+import { saveState, loadState, clearState, type SavedMessage } from './storage';
 
 declare global {
   interface Window {
@@ -17,6 +18,7 @@ let personasList: any[] = [];
 let fetchedData = false;
 let open = false;
 let messageCounter = 0;
+let messages: SavedMessage[] = [];
 
 // DOM Elements
 const statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
@@ -125,6 +127,11 @@ const resetDataViews = () => {
   selectedModel = null;
   selectedPersona = null;
   conversationId = null;
+  messages = [];
+  messageCounter = 0;
+  clearState();
+
+  if (chatMessageList) chatMessageList.innerHTML = "";
 
   if (modelsPlaceholder) {
     modelsPlaceholder.hidden = false;
@@ -186,6 +193,7 @@ const renderModels = () => {
     selectBtn.onclick = () => {
       selectedModel = selectedModel === model.model_name ? null : model.model_name;
       updateConfigBar();
+      persistState();
       renderModels();
     };
     card.appendChild(selectBtn);
@@ -228,6 +236,7 @@ const renderPersonas = () => {
     selectBtn.onclick = () => {
       selectedPersona = selectedPersona === persona.id ? null : persona.id;
       updateConfigBar();
+      persistState();
       renderPersonas();
     };
     card.appendChild(selectBtn);
@@ -368,7 +377,7 @@ const getShortTime = (): string => {
   return `${hours}:${minutesStr} ${ampm}`;
 };
 
-const appendMessage = (text: string, type: string): string => {
+const appendMessage = (text: string, type: string, savedTimestamp?: number): string => {
   if (!chatMessageList) return "";
   messageCounter++;
   const id = `msg-${messageCounter}`;
@@ -384,13 +393,50 @@ const appendMessage = (text: string, type: string): string => {
 
   const span = document.createElement("span");
   const sender = type.includes("outgoing") ? "you" : "zo";
-  span.textContent = `${sender} · ${getShortTime()}`;
+  const ts = savedTimestamp ? new Date(savedTimestamp) : new Date();
+  let hours = ts.getHours();
+  const minutes = ts.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+  span.textContent = `${sender} · ${hours}:${minutesStr} ${ampm}`;
   article.appendChild(span);
 
   chatMessageList.appendChild(article);
   chatMessageList.scrollTop = chatMessageList.scrollHeight;
 
+  if (!savedTimestamp) {
+    messages.push({ text, type, timestamp: Date.now() });
+    persistState();
+  }
+
   return id;
+};
+
+const persistState = (): void => {
+  saveState({
+    messages,
+    conversationId,
+    selectedModel,
+    selectedPersona,
+  });
+};
+
+const restoreState = (): void => {
+  const saved = loadState();
+  if (!saved) return;
+
+  conversationId = saved.conversationId;
+  selectedModel = saved.selectedModel;
+  selectedPersona = saved.selectedPersona;
+  messages = saved.messages;
+
+  for (const msg of messages) {
+    appendMessage(msg.text, msg.type, msg.timestamp);
+  }
+
+  updateConfigBar();
 };
 
 const removeMessage = (id: string) => {
@@ -399,6 +445,8 @@ const removeMessage = (id: string) => {
   if (el?.parentNode) {
     el.parentNode.removeChild(el);
   }
+  // Remove the last message from tracking (used for loading indicators)
+  messages.pop();
 };
 
 const sendMessage = async () => {
@@ -450,6 +498,7 @@ const sendMessage = async () => {
 
       if (res.data?.conversation_id) {
         conversationId = res.data.conversation_id;
+        persistState();
       }
 
       appendMessage(outputText, "incoming");
@@ -487,6 +536,8 @@ const buildQr = () => {
 
   apiKey = nextKey;
   window.ZO_API_KEY = apiKey;
+  clearState();
+  resetDataViews();
   syncState();
   fetchModelsAndPersonas();
 };
@@ -553,5 +604,8 @@ const handleRoute = () => {
 window.onhashchange = handleRoute;
 
 // Initialize
+if (apiKey) {
+  restoreState();
+}
 syncState();
 handleRoute();
