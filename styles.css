@@ -481,3 +481,98 @@ button {
     height: 180px;
   }
 }
+
+/* Chat & Models & Personas styling extensions */
+.chat-config-bar {
+  padding: 6px 10px;
+  background: #0f1622;
+  border: 1px solid #2c3b52;
+  font-size: 0.82em;
+  color: #8190a6;
+  margin-bottom: 12px;
+  border-radius: 2px;
+}
+
+.active-config-val {
+  color: #8bd3ff;
+  font-weight: bold;
+}
+
+.list-placeholder {
+  text-align: center;
+  padding: 24px 12px;
+  color: #8190a6;
+  font-style: italic;
+  border: 1px dashed #2c3b52;
+  background: #111924;
+  margin-top: 12px;
+}
+
+.card-grid {
+  display: block;
+  margin-top: 12px;
+}
+
+.card {
+  display: block;
+  padding: 12px;
+  border: 1px solid #2c3b52;
+  background: #141d2a;
+  margin-bottom: 8px;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.card:hover {
+  border-color: #3e5271;
+  background: #182333;
+}
+
+.card.active-item {
+  border-color: #8bd3ff;
+  background: #1a2738;
+}
+
+.card-title {
+  font-weight: bold;
+  color: #8bd3ff;
+  font-size: 1.05em;
+  margin: 0 0 4px 0;
+}
+
+.card-desc {
+  font-size: 0.88em;
+  color: #d3dce8;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+}
+
+.card-meta {
+  font-size: 0.8em;
+  color: #8190a6;
+}
+
+.card-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-top: 8px;
+  background: #233247;
+  border: 1px solid #2c3b52;
+  color: #8bd3ff;
+  font-weight: bold;
+  font-size: 0.82em;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.card-btn:hover {
+  background: #2e415c;
+}
+
+.card.active-item .card-btn {
+  background: #8bd3ff;
+  color: #121a27;
+  border-color: #8bd3ff;
+}
+

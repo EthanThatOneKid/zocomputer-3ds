@@ -24,37 +24,24 @@
       </header>
 
       <nav class="menu" aria-label="Primary navigation" id="primary-menu">
-        <a class="tile active" href="#home">Home</a>
-        <a class="tile" href="#chat">Chat</a>
-        <a class="tile" href="#tasks">Tasks</a>
-        <a class="tile" href="#tools">Tools</a>
+        <a class="tile active" href="#chat">Chat</a>
+        <a class="tile" href="#models">Models</a>
+        <a class="tile" href="#personas">Personas</a>
       </nav>
-
-      <section class="panel" id="home" aria-labelledby="home-title">
-        <div class="panel-head">
-          <h2 id="home-title">Today</h2>
-          <span class="panel-meta">ready for quick checks</span>
-        </div>
-        <ul class="checklist">
-          <li>Quick status at a glance</li>
-          <li>Simple navigation with clear labels</li>
-          <li>Readable layout for small screens</li>
-        </ul>
-      </section>
 
       <section class="panel" id="chat" aria-labelledby="chat-title">
         <div class="panel-head">
           <h2 id="chat-title">Chat</h2>
-          <a class="panel-link" href="#tools">open tools</a>
+          <span class="panel-meta" id="chat-meta">ready</span>
         </div>
-        <div class="message-list">
+        <div class="chat-config-bar" id="chat-config-bar">
+          Model: <span class="active-config-val" id="chat-model-selected">Default</span> &middot; 
+          Persona: <span class="active-config-val" id="chat-persona-selected">Default</span>
+        </div>
+        <div class="message-list" id="chat-message-list">
           <article class="message incoming">
-            <p>Need something done?</p>
-            <span>last ping · now</span>
-          </article>
-          <article class="message outgoing">
-            <p>Keep it simple and direct.</p>
-            <span>reply · saved</span>
+            <p>Need something done? Enter your API key to connect to your Zo Computer.</p>
+            <span>system · now</span>
           </article>
         </div>
         <div class="composer" aria-label="Chat composer">
@@ -71,41 +58,22 @@
         </div>
       </section>
 
-      <section class="panel" id="tasks" aria-labelledby="tasks-title">
+      <section class="panel" id="models" aria-labelledby="models-title">
         <div class="panel-head">
-          <h2 id="tasks-title">Tasks</h2>
-          <span class="panel-meta">3 open</span>
+          <h2 id="models-title">Models</h2>
+          <span class="panel-meta" id="models-meta">0 active</span>
         </div>
-        <ul class="task-list">
-          <li><span class="dot done"></span>Confirm the day’s priority</li>
-          <li><span class="dot"></span>Review one important thread</li>
-          <li><span class="dot"></span>Ship the next small thing</li>
-        </ul>
+        <div class="list-placeholder" id="models-placeholder">Add a key to view models.</div>
+        <div class="card-grid" id="models-list"></div>
       </section>
 
-      <section class="panel" id="tools" aria-labelledby="tools-title">
+      <section class="panel" id="personas" aria-labelledby="personas-title">
         <div class="panel-head">
-          <h2 id="tools-title">Tools</h2>
-          <span class="panel-meta">fast access</span>
+          <h2 id="personas-title">Personas</h2>
+          <span class="panel-meta" id="personas-meta">0 active</span>
         </div>
-        <div class="tool-grid">
-          <a class="tool-card" href="#chat">
-            <strong>Inbox</strong>
-            <span>scan recent messages</span>
-          </a>
-          <a class="tool-card" href="#tasks">
-            <strong>Planner</strong>
-            <span>see what matters next</span>
-          </a>
-          <a class="tool-card" href="#home">
-            <strong>Home</strong>
-            <span>return to the summary</span>
-          </a>
-          <a class="tool-card" href="#top">
-            <strong>System</strong>
-            <span>check device status</span>
-          </a>
-        </div>
+        <div class="list-placeholder" id="personas-placeholder">Add a key to view personas.</div>
+        <div class="card-grid" id="personas-list"></div>
       </section>
 
       <footer class="footer">

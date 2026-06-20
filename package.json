@@ -13,5 +13,8 @@
     "terser": "^5.48.0",
     "typescript": "^6.0.3",
     "vite": "^6.0.3"
+  },
+  "dependencies": {
+    "zocomputer": "^0.1.3"
   }
 }
