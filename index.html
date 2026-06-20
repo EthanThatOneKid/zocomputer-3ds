@@ -27,7 +27,7 @@
         <div class="badge-row">
           <span class="badge">3DS-friendly</span>
           <span class="badge">tap first</span>
-          <span class="badge">no JS required</span>
+          <span class="badge">ES3-safe JS</span>
         </div>
         <h1 id="hero-title">Zo, simplified for the 3DS browser.</h1>
         <p>
@@ -44,8 +44,8 @@
             <span>large touch targets</span>
           </div>
           <div class="stat">
-            <strong>0</strong>
-            <span>heavy scripts</span>
+            <strong>1</strong>
+            <span>tiny local script</span>
           </div>
         </div>
       </section>
@@ -166,13 +166,14 @@
           <button class="action-button" id="qr-build" type="button">Build QR</button>
         </div>
         <div class="dialog-result" id="qr-result" hidden>
-          <img class="qr-image" id="qr-image" alt="QR code for Zo 3DS session link" />
+          <svg class="qr-image" id="qr-image" viewBox="0 0 1 1" aria-label="QR code for Zo 3DS session link" role="img"></svg>
           <a class="qr-link" id="qr-link" href="#" target="_blank" rel="noreferrer">open QR link</a>
           <p class="qr-value" id="qr-value"></p>
         </div>
       </section>
     </div>
 
+    <script src="./qrcodegen.js"></script>
     <script>
       (function () {
         function getQueryParam(name) {
@@ -219,7 +220,7 @@
         window.ZO_API_KEY = apiKey;
 
         if (status) {
-          status.innerHTML = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
+          status.textContent = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
         }
 
         function getSessionUrl() {
@@ -231,19 +232,35 @@
 
         function renderQr() {
           var sessionUrl = getSessionUrl();
-          var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=" +
-            encodeURIComponent(sessionUrl);
+          var qr = qrcodegen.QrCode.encodeText(sessionUrl, qrcodegen.QrCode.Ecc.LOW);
+          var size = qr.size;
+          var border = 4;
+          var totalSize = size + border * 2;
+          var parts = [];
+          var y;
+          var x;
 
           if (link) {
             link.href = sessionUrl;
           }
 
           if (value) {
-            value.innerHTML = sessionUrl;
+            value.textContent = sessionUrl;
           }
 
           if (image) {
-            image.src = qrUrl;
+            for (y = 0; y < size; y += 1) {
+              for (x = 0; x < size; x += 1) {
+                if (qr.getModule(x, y)) {
+                  parts.push("M" + (x + border) + "," + (y + border) + "h1v1h-1z");
+                }
+              }
+            }
+
+            image.setAttribute("viewBox", "0 0 " + totalSize + " " + totalSize);
+            image.innerHTML =
+              '<rect width="100%" height="100%" fill="#ffffff"></rect>' +
+              '<path d="' + parts.join(" ") + '" fill="#000000"></path>';
           }
         }
 
@@ -251,7 +268,7 @@
           var unlocked = !!apiKey;
 
           if (status) {
-            status.innerHTML = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
+            status.textContent = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
             status.setAttribute("aria-expanded", open ? "true" : "false");
           }
 
@@ -268,7 +285,7 @@
           }
 
           if (copy) {
-            copy.innerHTML = apiKey
+            copy.textContent = apiKey
               ? "Scan this link on another device to open Zo 3DS with the key already attached."
               : "Enter an API key first, then build a QR code for the session link.";
           }

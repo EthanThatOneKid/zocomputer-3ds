@@ -427,7 +427,7 @@ button {
   width: 240px;
   height: 240px;
   margin: 0 auto 10px;
-  image-rendering: pixelated;
+  shape-rendering: crispEdges;
   background: #fff;
 }
 

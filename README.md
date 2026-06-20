@@ -10,10 +10,10 @@ Keep the experience readable, fast, and friendly to 3DS browser limits.
 
 - A stronger dashboard-style landing page
 - Large tap targets and stacked sections
-- No JavaScript, so the page stays lightweight
+- Minimal ES3-safe JavaScript for chat gating and QR rendering
 - Basic chat, task, and tools panels for the core Zo flow
 - A clickable status bar that opens a QR session dialog
-- ES3-safe browser JS that reads `?key=...` and builds a QR link
+- ES3-safe browser JS that reads `?key=...` and builds a local QR SVG
 - A fallback prompt for entering an API key before QR generation
 
 ## References
