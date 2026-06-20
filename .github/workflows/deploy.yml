@@ -39,7 +39,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build with base URL
-        run: npm run build -- --base=${{ steps.pages.outputs.base }}
+        run: npm run build -- --base=/${{ github.event.repository.name }}/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
