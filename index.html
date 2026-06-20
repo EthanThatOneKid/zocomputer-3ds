@@ -84,6 +84,18 @@
             <span>reply · saved</span>
           </article>
         </div>
+        <div class="composer" aria-label="Chat composer">
+          <label class="composer-label" for="chat-message-input">Message</label>
+          <input
+            class="composer-input"
+            id="chat-message-input"
+            type="text"
+            placeholder="enter a message"
+            disabled
+          />
+          <button class="composer-button" id="chat-send" type="button" disabled>Send</button>
+          <p class="composer-hint" id="chat-hint">Add a key to unlock chat input.</p>
+        </div>
       </section>
 
       <section class="panel" id="tasks" aria-labelledby="tasks-title">
@@ -199,6 +211,9 @@
         var link = document.getElementById("qr-link");
         var value = document.getElementById("qr-value");
         var copy = document.getElementById("qr-copy");
+        var chatInput = document.getElementById("chat-message-input");
+        var chatSend = document.getElementById("chat-send");
+        var chatHint = document.getElementById("chat-hint");
         var open = false;
 
         window.ZO_API_KEY = apiKey;
@@ -233,6 +248,8 @@
         }
 
         function syncState() {
+          var unlocked = !!apiKey;
+
           if (status) {
             status.innerHTML = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
             status.setAttribute("aria-expanded", open ? "true" : "false");
@@ -254,6 +271,22 @@
             copy.innerHTML = apiKey
               ? "Scan this link on another device to open Zo 3DS with the key already attached."
               : "Enter an API key first, then build a QR code for the session link.";
+          }
+
+          if (chatInput) {
+            chatInput.disabled = !unlocked;
+            chatInput.setAttribute("aria-disabled", unlocked ? "false" : "true");
+          }
+
+          if (chatSend) {
+            chatSend.disabled = !unlocked;
+            chatSend.setAttribute("aria-disabled", unlocked ? "false" : "true");
+          }
+
+          if (chatHint) {
+            chatHint.innerHTML = unlocked
+              ? "Chat input is unlocked."
+              : "Add a key to unlock chat input.";
           }
 
           if (apiKey) {

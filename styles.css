@@ -262,6 +262,58 @@ button {
   margin-left: 18px;
 }
 
+.composer {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #2c3b52;
+  background: #121b27;
+}
+
+.composer-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #8bd3ff;
+  font-weight: bold;
+}
+
+.composer-input {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid #2c3b52;
+  background: #0f1721;
+  color: #f4f7fb;
+}
+
+.composer-input:disabled {
+  color: #8190a6;
+  background: #0b1119;
+}
+
+.composer-button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #2c3b52;
+  background: #233247;
+  color: #8bd3ff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.composer-button:disabled {
+  color: #8190a6;
+  background: #16202c;
+  cursor: not-allowed;
+}
+
+.composer-hint {
+  margin: 8px 0 0;
+  color: #d3dce8;
+  font-size: 0.88em;
+}
+
 .tool-grid {
 }
 
@@ -446,6 +498,10 @@ button {
 
   .message.outgoing {
     margin-left: 8px;
+  }
+
+  .composer {
+    padding: 10px;
   }
 
   .dialog {
