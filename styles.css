@@ -2,9 +2,10 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: #10151d;
+  background:
+    radial-gradient(circle at top, #22314a 0%, #121a27 42%, #091019 100%);
   color: #f4f7fb;
-  font: 16px/1.4 Arial, Helvetica, sans-serif;
+  font: 16px/1.45 Arial, Helvetica, sans-serif;
 }
 
 a {
@@ -12,15 +13,23 @@ a {
   text-decoration: none;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 .shell {
+  max-width: 520px;
+  margin: 0 auto;
   padding: 12px;
 }
 
 .topbar,
 .menu,
-.panel {
+.panel,
+.screen,
+.footer {
   border: 2px solid #2c3b52;
-  background: #16202c;
+  background: rgba(18, 27, 39, 0.96);
 }
 
 .topbar {
@@ -28,7 +37,6 @@ a {
   width: 100%;
   margin-bottom: 12px;
   padding: 8px 10px;
-  box-sizing: border-box;
 }
 
 .brand,
@@ -38,29 +46,101 @@ a {
   font-weight: bold;
 }
 
+.brand {
+  letter-spacing: 0.12em;
+}
+
 .status {
   text-align: right;
   color: #8bd3ff;
+  font-size: 0.9em;
 }
 
-.hero,
-.panel {
+.screen,
+.panel,
+.footer {
   margin-bottom: 12px;
   padding: 12px;
-  box-sizing: border-box;
 }
 
 .hero h1,
 .panel h2 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 20px;
+  line-height: 1.15;
 }
 
 .hero p,
 .panel p,
-.panel li {
-  margin: 0;
+.panel li,
+.footer p,
+.panel-meta,
+.message span,
+.tool-card span {
   color: #d3dce8;
+}
+
+.hero p,
+.footer p {
+  margin: 10px 0 0;
+}
+
+.badge-row,
+.stats {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tool-grid {
+  display: block;
+}
+
+.badge-row {
+  margin-bottom: 10px;
+}
+
+.badge {
+  display: table-cell;
+  padding: 6px 4px;
+  text-align: center;
+  border: 1px solid #2c3b52;
+  background: #182130;
+  color: #8bd3ff;
+  font-size: 0.82em;
+  font-weight: bold;
+}
+
+.badge + .badge {
+  border-left: 0;
+}
+
+.stats {
+  margin-top: 14px;
+}
+
+.stat {
+  display: table-cell;
+  padding: 10px 6px;
+  text-align: center;
+  border: 1px solid #2c3b52;
+  background: #16202c;
+}
+
+.stat + .stat {
+  border-left: 0;
+}
+
+.stat strong {
+  display: block;
+  font-size: 22px;
+  color: #8bd3ff;
+}
+
+.stat span {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.84em;
 }
 
 .menu {
@@ -87,7 +167,169 @@ a {
   color: #8bd3ff;
 }
 
-.panel ul {
+.panel-head {
+  display: table;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.panel-head h2,
+.panel-head .panel-meta,
+.panel-head .panel-link {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.panel-head .panel-meta,
+.panel-head .panel-link {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 0.9em;
+}
+
+.panel-link {
+  color: #8bd3ff;
+  font-weight: bold;
+}
+
+.checklist,
+.task-list {
   margin: 0;
   padding-left: 20px;
+}
+
+.checklist li + li,
+.task-list li + li {
+  margin-top: 8px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border: 2px solid #8bd3ff;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.dot.done {
+  background: #8bd3ff;
+}
+
+.message-list {
+  display: table;
+  width: 100%;
+  border-spacing: 0 8px;
+}
+
+.message {
+  display: block;
+  padding: 10px;
+  border: 1px solid #2c3b52;
+  background: #16202c;
+}
+
+.message p,
+.message span {
+  margin: 0;
+}
+
+.message span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.84em;
+}
+
+.message.outgoing {
+  background: #1d2b3d;
+  margin-left: 18px;
+}
+
+.tool-grid {
+}
+
+.tool-card {
+  display: block;
+  padding: 11px 12px;
+  border: 1px solid #2c3b52;
+  background: #16202c;
+}
+
+.tool-card strong,
+.tool-card span {
+  display: block;
+}
+
+.tool-card strong {
+  margin-bottom: 4px;
+  color: #8bd3ff;
+}
+
+.tool-card:nth-child(odd) {
+  background: #182535;
+}
+
+.tool-card + .tool-card {
+  margin-top: 8px;
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.92em;
+}
+
+@media (max-width: 360px) {
+  .shell {
+    padding: 8px;
+  }
+
+  .brand,
+  .status {
+    display: block;
+    text-align: center;
+  }
+
+  .status {
+    margin-top: 4px;
+  }
+
+  .topbar,
+  .menu,
+  .badge-row,
+  .stats,
+  .panel-head {
+    display: block;
+  }
+
+  .tile,
+  .badge,
+  .stat,
+  .panel-head h2,
+  .panel-head .panel-meta,
+  .panel-head .panel-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+
+  .tile,
+  .badge,
+  .stat,
+  .tool-card {
+    border-right: 1px solid #2c3b52;
+    border-left: 1px solid #2c3b52;
+  }
+
+  .tile + .tile,
+  .badge + .badge,
+  .stat + .stat,
+  .tool-card + .tool-card {
+    border-top: 0;
+    border-left: 1px solid #2c3b52;
+  }
+
+  .message.outgoing {
+    margin-left: 8px;
+  }
 }

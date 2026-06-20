@@ -8,50 +8,117 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="shell">
-      <div class="topbar">
+    <main class="shell" id="top">
+      <header class="topbar" aria-label="Status bar">
         <div class="brand">ZO 3DS</div>
-        <div class="status">ready</div>
-      </div>
+        <div class="status">online · battery 84%</div>
+      </header>
 
-      <div class="hero">
-        <h1>Zo for the 3DS browser</h1>
+      <section class="screen hero" aria-labelledby="hero-title">
+        <div class="badge-row">
+          <span class="badge">3DS-friendly</span>
+          <span class="badge">tap first</span>
+          <span class="badge">no JS required</span>
+        </div>
+        <h1 id="hero-title">Zo, simplified for the 3DS browser.</h1>
         <p>
-          A stripped-down, button-first demake of the Zo interface built to fit
-          the 3DS browser.
+          A lightweight demake that keeps the core Zo experience readable,
+          fast, and usable on older handheld hardware.
         </p>
-      </div>
+        <div class="stats" aria-label="Overview stats">
+          <div class="stat">
+            <strong>4</strong>
+            <span>core zones</span>
+          </div>
+          <div class="stat">
+            <strong>12</strong>
+            <span>large touch targets</span>
+          </div>
+          <div class="stat">
+            <strong>0</strong>
+            <span>heavy scripts</span>
+          </div>
+        </div>
+      </section>
 
-      <div class="menu">
+      <nav class="menu" aria-label="Primary navigation">
         <a class="tile active" href="#home">Home</a>
         <a class="tile" href="#chat">Chat</a>
         <a class="tile" href="#tasks">Tasks</a>
         <a class="tile" href="#tools">Tools</a>
-      </div>
+      </nav>
 
-      <div class="panel" id="home">
-        <h2>Today</h2>
-        <ul>
+      <section class="panel" id="home" aria-labelledby="home-title">
+        <div class="panel-head">
+          <h2 id="home-title">Today</h2>
+          <span class="panel-meta">ready for quick checks</span>
+        </div>
+        <ul class="checklist">
           <li>Quick status at a glance</li>
-          <li>Large tap targets</li>
-          <li>Simple layout for older browsers</li>
+          <li>Simple navigation with clear labels</li>
+          <li>Readable layout for small screens</li>
         </ul>
-      </div>
+      </section>
 
-      <div class="panel" id="chat">
-        <h2>Chat</h2>
-        <p>Keep the interface readable and lightweight.</p>
-      </div>
+      <section class="panel" id="chat" aria-labelledby="chat-title">
+        <div class="panel-head">
+          <h2 id="chat-title">Chat</h2>
+          <a class="panel-link" href="#tools">open tools</a>
+        </div>
+        <div class="message-list">
+          <article class="message incoming">
+            <p>Need something done?</p>
+            <span>last ping · now</span>
+          </article>
+          <article class="message outgoing">
+            <p>Keep it simple and direct.</p>
+            <span>reply · saved</span>
+          </article>
+        </div>
+      </section>
 
-      <div class="panel" id="tasks">
-        <h2>Tasks</h2>
-        <p>Show only the essentials.</p>
-      </div>
+      <section class="panel" id="tasks" aria-labelledby="tasks-title">
+        <div class="panel-head">
+          <h2 id="tasks-title">Tasks</h2>
+          <span class="panel-meta">3 open</span>
+        </div>
+        <ul class="task-list">
+          <li><span class="dot done"></span>Confirm the day’s priority</li>
+          <li><span class="dot"></span>Review one important thread</li>
+          <li><span class="dot"></span>Ship the next small thing</li>
+        </ul>
+      </section>
 
-      <div class="panel" id="tools">
-        <h2>Tools</h2>
-        <p>Fast access to the basics.</p>
-      </div>
-    </div>
+      <section class="panel" id="tools" aria-labelledby="tools-title">
+        <div class="panel-head">
+          <h2 id="tools-title">Tools</h2>
+          <span class="panel-meta">fast access</span>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="#chat">
+            <strong>Inbox</strong>
+            <span>scan recent messages</span>
+          </a>
+          <a class="tool-card" href="#tasks">
+            <strong>Planner</strong>
+            <span>see what matters next</span>
+          </a>
+          <a class="tool-card" href="#home">
+            <strong>Home</strong>
+            <span>return to the summary</span>
+          </a>
+          <a class="tool-card" href="#top">
+            <strong>System</strong>
+            <span>check device status</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Built for handheld browsing. Minimal chrome, large targets, fast load.
+        </p>
+      </footer>
+    </main>
   </body>
 </html>
