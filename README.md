@@ -16,6 +16,14 @@ Keep the experience readable, fast, and friendly to 3DS browser limits.
 - ES3-safe browser JS that reads `?key=...` and builds a local QR SVG
 - A fallback prompt for entering an API key before QR generation
 
+## Development
+
+Run the development server locally in watch mode using Vite:
+
+```bash
+npx vite
+```
+
 ## References
 
 - `https://github.com/EthanThatOneKid/zocomputer-ts`

@@ -23,34 +23,7 @@
         </button>
       </header>
 
-      <section class="screen hero" aria-labelledby="hero-title">
-        <div class="badge-row">
-          <span class="badge">3DS-friendly</span>
-          <span class="badge">tap first</span>
-          <span class="badge">ES3-safe JS</span>
-        </div>
-        <h1 id="hero-title">Zo, simplified for the 3DS browser.</h1>
-        <p>
-          A lightweight demake that keeps the core Zo experience readable,
-          fast, and usable on older handheld hardware.
-        </p>
-        <div class="stats" aria-label="Overview stats">
-          <div class="stat">
-            <strong>4</strong>
-            <span>core zones</span>
-          </div>
-          <div class="stat">
-            <strong>12</strong>
-            <span>large touch targets</span>
-          </div>
-          <div class="stat">
-            <strong>1</strong>
-            <span>tiny local script</span>
-          </div>
-        </div>
-      </section>
-
-      <nav class="menu" aria-label="Primary navigation">
+      <nav class="menu" aria-label="Primary navigation" id="primary-menu">
         <a class="tile active" href="#home">Home</a>
         <a class="tile" href="#chat">Chat</a>
         <a class="tile" href="#tasks">Tasks</a>
@@ -371,7 +344,50 @@
           };
         }
 
+        function handleRoute() {
+          var hash = window.location.hash || "#home";
+          var panels = ["home", "chat", "tasks", "tools"];
+          var matched = false;
+          var i;
+
+          for (i = 0; i < panels.length; i += 1) {
+            if ("#" + panels[i] === hash) {
+              matched = true;
+            }
+          }
+          if (!matched) {
+            hash = "#home";
+          }
+
+          for (i = 0; i < panels.length; i += 1) {
+            var panelEl = document.getElementById(panels[i]);
+            if (panelEl) {
+              if ("#" + panels[i] === hash) {
+                panelEl.style.display = "block";
+              } else {
+                panelEl.style.display = "none";
+              }
+            }
+          }
+
+          var menu = document.getElementById("primary-menu");
+          if (menu) {
+            var tiles = menu.getElementsByTagName("a");
+            for (i = 0; i < tiles.length; i += 1) {
+              var href = tiles[i].getAttribute("href");
+              if (href === hash) {
+                tiles[i].className = "tile active";
+              } else {
+                tiles[i].className = "tile";
+              }
+            }
+          }
+        }
+
+        window.onhashchange = handleRoute;
+
         syncState();
+        handleRoute();
       })();
     </script>
   </body>

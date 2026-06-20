@@ -27,18 +27,21 @@ button {
 }
 
 .shell {
-  max-width: 520px;
+  max-width: 400px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 8px;
 }
 
 .topbar,
 .menu,
 .panel,
-.screen,
 .footer {
   border: 2px solid #2c3b52;
   background: rgba(18, 27, 39, 0.96);
+}
+
+.panel {
+  display: none;
 }
 
 .topbar {
@@ -72,14 +75,12 @@ button {
   cursor: pointer;
 }
 
-.screen,
 .panel,
 .footer {
   margin-bottom: 12px;
   padding: 12px;
 }
 
-.hero h1,
 .panel h2 {
   margin: 0;
   font-size: 20px;
@@ -168,10 +169,16 @@ button {
 
 .tile {
   display: table-cell;
-  padding: 12px 8px;
+  padding: 10px 6px;
   border-right: 1px solid #2c3b52;
   text-align: center;
   font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tile:hover {
+  background: #182230;
 }
 
 .tile:last-child {
@@ -181,6 +188,10 @@ button {
 .tile.active {
   background: #233247;
   color: #8bd3ff;
+}
+
+.tile.active:hover {
+  background: #233247;
 }
 
 .panel-head {
@@ -448,52 +459,7 @@ button {
 
 @media (max-width: 360px) {
   .shell {
-    padding: 8px;
-  }
-
-  .brand,
-  .status {
-    display: block;
-    text-align: center;
-  }
-
-  .status {
-    margin-top: 4px;
-  }
-
-  .topbar,
-  .menu,
-  .badge-row,
-  .stats,
-  .panel-head {
-    display: block;
-  }
-
-  .tile,
-  .badge,
-  .stat,
-  .panel-head h2,
-  .panel-head .panel-meta,
-  .panel-head .panel-link {
-    display: block;
-    width: 100%;
-    text-align: left;
-  }
-
-  .tile,
-  .badge,
-  .stat,
-  .tool-card {
-    border-right: 1px solid #2c3b52;
-    border-left: 1px solid #2c3b52;
-  }
-
-  .tile + .tile,
-  .badge + .badge,
-  .stat + .stat,
-  .tool-card + .tool-card {
-    border-top: 0;
-    border-left: 1px solid #2c3b52;
+    padding: 6px;
   }
 
   .message.outgoing {
@@ -505,12 +471,13 @@ button {
   }
 
   .dialog {
-    width: calc(100% - 16px);
-    margin-top: 24px;
+    width: calc(100% - 12px);
+    margin-top: 12px;
+    padding: 10px;
   }
 
   .qr-image {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
   }
 }
