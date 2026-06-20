@@ -11,7 +11,7 @@
     <main class="shell" id="top">
       <header class="topbar" aria-label="Status bar">
         <div class="brand">ZO 3DS</div>
-        <div class="status">online · battery 84%</div>
+        <div class="status" id="api-status">api key loading…</div>
       </header>
 
       <section class="screen hero" aria-labelledby="hero-title">
@@ -120,5 +120,40 @@
         </p>
       </footer>
     </main>
+    <script>
+      (function () {
+        function getQueryParam(name) {
+          var query = window.location.search;
+          var parts;
+          var i;
+
+          if (!query || query.length < 2) {
+            return "";
+          }
+
+          parts = query.substring(1).split("&");
+          for (i = 0; i < parts.length; i += 1) {
+            var pair = parts[i].split("=");
+            var key = decodeURIComponent(pair[0].replace(/\+/g, " "));
+            var value = pair.length > 1 ? pair.slice(1).join("=") : "";
+
+            if (key === name) {
+              return decodeURIComponent(value.replace(/\+/g, " "));
+            }
+          }
+
+          return "";
+        }
+
+        var apiKey = getQueryParam("key");
+        var status = document.getElementById("api-status");
+
+        window.ZO_API_KEY = apiKey;
+
+        if (status) {
+          status.innerHTML = apiKey ? "api key set" : "api key missing";
+        }
+      })();
+    </script>
   </body>
 </html>
