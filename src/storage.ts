@@ -1,6 +1,4 @@
-import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
-
-const PREFIX = 'zo3ds_';
+var PREFIX = 'zo3ds_';
 
 export interface SavedMessage {
   text: string;
@@ -24,125 +22,126 @@ export interface ConversationMeta {
   selectedPersona: string | null;
 }
 
-const tryGetLS = (key: string): string | null => {
+function tryGetLS(key: string): string | null {
   try { return localStorage.getItem(key); } catch { return null; }
-};
+}
 
-const trySetLS = (key: string, value: string): boolean => {
+function trySetLS(key: string, value: string): boolean {
   try { localStorage.setItem(key, value); return true; } catch { return false; }
-};
+}
 
-const setCookie = (name: string, value: string): void => {
+function setCookie(name: string, value: string): void {
   try {
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
-  } catch { /* noop */ }
-};
+    document.cookie = name + '=' + encodeURIComponent(value) + '; path=/; max-age=31536000';
+  } catch {}
+}
 
-const getCookie = (name: string): string | null => {
+function getCookie(name: string): string | null {
   try {
-    const prefix = `${name}=`;
-    for (const c of document.cookie.split(';')) {
-      const trimmed = c.trim();
-      if (trimmed.startsWith(prefix)) {
+    var prefix = name + '=';
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var trimmed = cookies[i].trim();
+      if (trimmed.indexOf(prefix) === 0) {
         return decodeURIComponent(trimmed.substring(prefix.length));
       }
     }
-  } catch { /* noop */ }
+  } catch {}
   return null;
-};
+}
 
-export const saveData = (key: string, value: string): void => {
-  const prefixed = PREFIX + key;
+export function saveData(key: string, value: string): void {
+  var prefixed = PREFIX + key;
   if (!trySetLS(prefixed, value)) {
     setCookie(prefixed, value);
   }
-};
+}
 
-export const loadData = (key: string): string | null => {
-  const prefixed = PREFIX + key;
-  const ls = tryGetLS(prefixed);
+export function loadData(key: string): string | null {
+  var prefixed = PREFIX + key;
+  var ls = tryGetLS(prefixed);
   if (ls !== null) return ls;
   return getCookie(prefixed);
-};
+}
 
-export const removeData = (key: string): void => {
-  const prefixed = PREFIX + key;
-  try { localStorage.removeItem(prefixed); } catch { /* noop */ }
-  try { document.cookie = `${prefixed}=; path=/; max-age=0`; } catch { /* noop */ }
-};
+export function removeData(key: string): void {
+  var prefixed = PREFIX + key;
+  try { localStorage.removeItem(prefixed); } catch {}
+  try { document.cookie = prefixed + '=; path=/; max-age=0'; } catch {}
+}
 
-const C1 = 'c1:';
+export function saveState(state: SavedState): void {
+  saveData('state', JSON.stringify(state));
+}
 
-export const saveState = (state: SavedState): void => {
-  const json = JSON.stringify(state);
-  saveData('state', C1 + compressToUTF16(json));
-};
-
-export const loadState = (): SavedState | null => {
-  const raw = loadData('state');
+export function loadState(): SavedState | null {
+  var raw = loadData('state');
   if (!raw) return null;
   try {
-    const decompressed = raw.startsWith(C1) ? decompressFromUTF16(raw.substring(C1.length)) : raw;
-    if (decompressed == null) return null;
-    const parsed = JSON.parse(decompressed) as SavedState;
+    var parsed = JSON.parse(raw) as SavedState;
     if (Array.isArray(parsed.messages)) return parsed;
-  } catch { /* noop */ }
+  } catch {}
   return null;
-};
+}
 
-export const clearState = (): void => {
+export function clearState(): void {
   removeData('state');
-};
+}
 
-const CONVERSATIONS_KEY = 'conversations';
+var CONVERSATIONS_KEY = 'conversations';
 
-export const loadConversationList = (): ConversationMeta[] => {
-  const raw = loadData(CONVERSATIONS_KEY);
+export function loadConversationList(): ConversationMeta[] {
+  var raw = loadData(CONVERSATIONS_KEY);
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
+    var parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed as ConversationMeta[];
-  } catch { /* noop */ }
+  } catch {}
   return [];
-};
+}
 
-const saveConversationList = (list: ConversationMeta[]): void => {
+function saveConversationList(list: ConversationMeta[]): void {
   saveData(CONVERSATIONS_KEY, JSON.stringify(list));
-};
+}
 
-const conversationMessagesKey = (id: string): string => `conversation_${id}`;
+function conversationMessagesKey(id: string): string {
+  return 'conversation_' + id;
+}
 
-export const saveConversationMessages = (id: string, messages: SavedMessage[]): void => {
-  const json = JSON.stringify(messages);
-  saveData(conversationMessagesKey(id), C1 + compressToUTF16(json));
-};
+export function saveConversationMessages(id: string, messages: SavedMessage[]): void {
+  saveData(conversationMessagesKey(id), JSON.stringify(messages));
+}
 
-export const loadConversationMessages = (id: string): SavedMessage[] | null => {
-  const raw = loadData(conversationMessagesKey(id));
+export function loadConversationMessages(id: string): SavedMessage[] | null {
+  var raw = loadData(conversationMessagesKey(id));
   if (!raw) return null;
   try {
-    const decompressed = raw.startsWith(C1) ? decompressFromUTF16(raw.substring(C1.length)) : raw;
-    if (decompressed == null) return null;
-    const parsed = JSON.parse(decompressed);
+    var parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed as SavedMessage[];
-  } catch { /* noop */ }
+  } catch {}
   return null;
-};
+}
 
-const removeConversationMessages = (id: string): void => {
+function removeConversationMessages(id: string): void {
   removeData(conversationMessagesKey(id));
-};
+}
 
-export const upsertConversationMeta = (
+export function upsertConversationMeta(
   id: string,
   title: string,
   messages: SavedMessage[],
   selectedModel: string | null,
   selectedPersona: string | null
-): void => {
-  const list = loadConversationList();
-  const lastUpdated = messages.length > 0 ? messages[messages.length - 1].timestamp : Date.now();
-  const existing = list.find(m => m.id === id);
+): void {
+  var list = loadConversationList();
+  var lastUpdated = messages.length > 0 ? messages[messages.length - 1].timestamp : Date.now();
+  var existing: ConversationMeta | null = null;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) {
+      existing = list[i];
+      break;
+    }
+  }
   if (existing) {
     existing.title = title;
     existing.messageCount = messages.length;
@@ -151,65 +150,72 @@ export const upsertConversationMeta = (
     existing.selectedPersona = selectedPersona;
   } else {
     list.push({
-      id,
-      title,
+      id: id,
+      title: title,
       messageCount: messages.length,
-      lastUpdated,
-      selectedModel,
-      selectedPersona,
+      lastUpdated: lastUpdated,
+      selectedModel: selectedModel,
+      selectedPersona: selectedPersona,
     });
   }
   saveConversationList(list);
   saveConversationMessages(id, messages);
-};
+}
 
-export const deleteConversation = (id: string): void => {
-  const list = loadConversationList().filter(m => m.id !== id);
+export function deleteConversation(id: string): void {
+  var orig = loadConversationList();
+  var list: ConversationMeta[] = [];
+  for (var i = 0; i < orig.length; i++) {
+    if (orig[i].id !== id) {
+      list.push(orig[i]);
+    }
+  }
   saveConversationList(list);
   removeConversationMessages(id);
-};
+}
 
-export const renameConversation = (id: string, newTitle: string): void => {
-  const list = loadConversationList();
-  const meta = list.find(m => m.id === id);
-  if (meta) {
-    meta.title = newTitle;
-    saveConversationList(list);
+export function renameConversation(id: string, newTitle: string): void {
+  var list = loadConversationList();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) {
+      list[i].title = newTitle;
+      break;
+    }
   }
-};
+  saveConversationList(list);
+}
 
-export const migrateOldState = (): void => {
-  const existingList = loadConversationList();
+export function migrateOldState(): void {
+  var existingList = loadConversationList();
   if (existingList.length > 0) return;
-
-  const state = loadState();
+  var state = loadState();
   if (!state || !state.conversationId || state.messages.length === 0) return;
-
+  var title = state.messages[0] && state.messages[0].text ? state.messages[0].text.substring(0, 50) : 'Conversation';
   upsertConversationMeta(
     state.conversationId,
-    state.messages[0]?.text?.substring(0, 50) || 'Conversation',
+    title,
     state.messages,
     state.selectedModel,
     state.selectedPersona
   );
-};
+}
 
-export const clearAllData = (): void => {
-  const list = loadConversationList();
-  for (const conv of list) {
-    removeConversationMessages(conv.id);
+export function clearAllData(): void {
+  var list = loadConversationList();
+  for (var i = 0; i < list.length; i++) {
+    removeConversationMessages(list[i].id);
   }
   removeData(CONVERSATIONS_KEY);
   removeData('state');
-  const toRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(PREFIX)) {
+  var toRemove: string[] = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key && key.indexOf(PREFIX) === 0) {
       toRemove.push(key);
     }
   }
-  for (const key of toRemove) {
-    try { localStorage.removeItem(key); } catch { /* noop */ }
-    try { document.cookie = `${key}=; path=/; max-age=0`; } catch { /* noop */ }
+  for (var i = 0; i < toRemove.length; i++) {
+    try { localStorage.removeItem(toRemove[i]); } catch {}
+    try { document.cookie = toRemove[i] + '=; path=/; max-age=0'; } catch {}
   }
-};
+}

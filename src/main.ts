@@ -1,157 +1,205 @@
-import { qrcodegen } from './qrcodegen';
-import { createClient, getAvailableModels, getAvailablePersonas } from 'zocomputer';
 import {
   saveState, loadState, clearState, clearAllData,
   migrateOldState, loadConversationList, loadConversationMessages,
   upsertConversationMeta, deleteConversation as deleteStoredConversation,
-  renameConversation,
-  type SavedMessage
+  renameConversation
 } from './storage';
 
 declare global {
   interface Window {
     ZO_API_KEY: string;
+    __qrcodegen: any;
   }
 }
 
-// Global scope initialization
-let apiKey = '';
-let selectedModel: string | null = null;
-let selectedPersona: string | null = null;
-let conversationId: string | null = null;
-let modelsList: any[] = [];
-let personasList: any[] = [];
-let fetchedData = false;
-let open = false;
-let messageCounter = 0;
-let messages: SavedMessage[] = [];
-let conversationTitle = '';
-const MAX_CONVERSATION_MESSAGES = 100;
+var apiKey = '';
+var selectedModel: string | null = null;
+var selectedPersona: string | null = null;
+var conversationId: string | null = null;
+var modelsList: any[] = [];
+var personasList: any[] = [];
+var fetchedData = false;
+var open = false;
+var messageCounter = 0;
+var messages: any[] = [];
+var conversationTitle = '';
+var MAX_CONVERSATION_MESSAGES = 100;
 
-// DOM Elements
-const statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
-const modal = document.getElementById("qr-modal") as HTMLDivElement | null;
-const backdrop = document.getElementById("qr-backdrop") as HTMLButtonElement | null;
-const closeButton = document.getElementById("qr-close") as HTMLButtonElement | null;
-const buildButton = document.getElementById("qr-build") as HTMLButtonElement | null;
-const keyInput = document.getElementById("qr-key-input") as HTMLInputElement | null;
-const setup = document.getElementById("qr-setup") as HTMLDivElement | null;
-const result = document.getElementById("qr-result") as HTMLDivElement | null;
-const image = document.getElementById("qr-image") as unknown as SVGSVGElement | null;
-const link = document.getElementById("qr-link") as HTMLAnchorElement | null;
-const value = document.getElementById("qr-value") as HTMLParagraphElement | null;
-const copy = document.getElementById("qr-copy") as HTMLParagraphElement | null;
+var statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
+var modal = document.getElementById("qr-modal") as HTMLDivElement | null;
+var backdrop = document.getElementById("qr-backdrop") as HTMLButtonElement | null;
+var closeButton = document.getElementById("qr-close") as HTMLButtonElement | null;
+var buildButton = document.getElementById("qr-build") as HTMLButtonElement | null;
+var keyInput = document.getElementById("qr-key-input") as HTMLInputElement | null;
+var setup = document.getElementById("qr-setup") as HTMLDivElement | null;
+var result = document.getElementById("qr-result") as HTMLDivElement | null;
+var image = document.getElementById("qr-image") as unknown as SVGSVGElement | null;
+var link = document.getElementById("qr-link") as HTMLAnchorElement | null;
+var value = document.getElementById("qr-value") as HTMLParagraphElement | null;
+var copy = document.getElementById("qr-copy") as HTMLParagraphElement | null;
 
-const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
-const chatSend = document.getElementById("chat-send") as HTMLButtonElement | null;
-const chatHint = document.getElementById("chat-hint") as HTMLParagraphElement | null;
-const chatMessageList = document.getElementById("chat-message-list") as HTMLDivElement | null;
+var chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
+var chatSend = document.getElementById("chat-send") as HTMLButtonElement | null;
+var chatHint = document.getElementById("chat-hint") as HTMLParagraphElement | null;
+var chatMessageList = document.getElementById("chat-message-list") as HTMLDivElement | null;
 
-const modelsPlaceholder = document.getElementById("models-placeholder") as HTMLDivElement | null;
-const modelsListEl = document.getElementById("models-list") as HTMLDivElement | null;
-const modelsMetaEl = document.getElementById("models-meta") as HTMLSpanElement | null;
+var modelsPlaceholder = document.getElementById("models-placeholder") as HTMLDivElement | null;
+var modelsListEl = document.getElementById("models-list") as HTMLDivElement | null;
+var modelsMetaEl = document.getElementById("models-meta") as HTMLSpanElement | null;
 
-const personasPlaceholder = document.getElementById("personas-placeholder") as HTMLDivElement | null;
-const personasListEl = document.getElementById("personas-list") as HTMLDivElement | null;
-const personasMetaEl = document.getElementById("personas-meta") as HTMLSpanElement | null;
+var personasPlaceholder = document.getElementById("personas-placeholder") as HTMLDivElement | null;
+var personasListEl = document.getElementById("personas-list") as HTMLDivElement | null;
+var personasMetaEl = document.getElementById("personas-meta") as HTMLSpanElement | null;
 
-const chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
-const chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
-const chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
+var chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
+var chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
+var chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
 
-const settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
-const settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+var settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
+var settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
 
-const conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
-const conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
-const conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
-const conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
-const chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
+var conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
+var conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
+var conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
+var conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
+var chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
 
-/**
- * Parses queries out of the search parameters (e.g. `?key=...`)
- */
-const getQueryParam = (name: string): string => {
-  const query = window.location.search;
+function getQueryParam(name: string): string {
+  var query = window.location.search;
   if (!query || query.length < 2) return "";
-  const parts = query.substring(1).split("&");
-  for (const part of parts) {
-    const [key, val] = part.split("=");
-    if (decodeURIComponent(key.replace(/\+/g, " ")) === name) {
-      return decodeURIComponent((val || "").replace(/\+/g, " "));
+  var parts = query.substring(1).split("&");
+  for (var i = 0; i < parts.length; i++) {
+    var pair = parts[i].split("=");
+    if (decodeURIComponent(pair[0].replace(/\+/g, " ")) === name) {
+      return decodeURIComponent((pair[1] || "").replace(/\+/g, " "));
     }
   }
   return "";
-};
+}
 
-const normalizeApiKey = (value: string): string => value.replace(/^Bearer\s+/i, "").trim();
+function normalizeApiKey(value: string): string {
+  return value.replace(/^Bearer\s+/i, "").trim();
+}
 
 apiKey = normalizeApiKey(getQueryParam("key"));
 window.ZO_API_KEY = apiKey;
 
-/**
- * Returns the Base URL for API requests.
- * 
- * NOTE: Browsers enforce CORS policies, but the Zo API domain does not allow
- * requests originating from localhost:5173. To bypass this during local development, 
- * we route calls to '/zo-api', which Vite's proxy forwards to 'https://api.zo.computer'.
- * On real 3DS console viewports, we directly hit the main API because legacy NetFront
- * does not enforce modern CORS rules. Everywhere else, we go through the Zo Space
- * proxy route and pass the upstream path through ?path=.
- */
-const getApiBaseUrl = (): string => {
-  const host = window.location.hostname;
+function getApiBaseUrl(): string {
+  var host = window.location.hostname;
   if (host === 'localhost' || host === '127.0.0.1') {
-    return `${window.location.origin}/zo-api`;
+    return window.location.origin + '/zo-api';
   }
-  const isThreeDs = /(?:Nintendo|New Nintendo|3DS)/i.test(window.navigator.userAgent);
+  var isThreeDs = /(?:Nintendo|New Nintendo|3DS)/i.test(window.navigator.userAgent);
   if (isThreeDs) return 'https://api.zo.computer';
-  // 3DS NetFront doesn't enforce CORS; modern browsers need the Zo Space proxy.
-  // The proxy forwards upstream paths via ?path= and adds CORS headers.
-  if (host.includes('github.io') || host.includes('pages.dev')) {
+  if (host.indexOf('github.io') !== -1 || host.indexOf('pages.dev') !== -1) {
     return 'https://etok.zo.space/zo-proxy?path=';
   }
   return 'https://api.zo.computer';
-};
+}
 
-const getSessionUrl = (): string => {
-  const [base] = window.location.href.split("?");
-  const hash = window.location.hash || "";
-  return `${base}?key=${encodeURIComponent(apiKey || "")}${hash}`;
-};
+function getSessionUrl(): string {
+  var href = window.location.href;
+  var idx = href.indexOf("?");
+  var base = idx === -1 ? href : href.substring(0, idx);
+  var hash = window.location.hash || "";
+  return base + "?key=" + encodeURIComponent(apiKey || "") + hash;
+}
 
-/**
- * Generates an SVG representation of the session URL's QR code
- */
-const renderQr = () => {
-  const sessionUrl = getSessionUrl();
-  const qr = qrcodegen.QrCode.encodeText(sessionUrl, qrcodegen.QrCode.Ecc.LOW);
-  const size = qr.size;
-  const border = 4;
-  const totalSize = size + border * 2;
-  const parts: string[] = [];
+function getQrcodegenUrl(): string {
+  var host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return '/src/qrcodegen.ts';
+  }
+  return '/assets/qrcodegen.js';
+}
+
+function loadQrcodegen(callback: () => void): void {
+  if (window.__qrcodegen) {
+    callback();
+    return;
+  }
+  var script = document.createElement('script');
+  script.src = getQrcodegenUrl();
+  script.onload = function () { callback(); };
+  document.head.appendChild(script);
+}
+
+function renderQr(): void {
+  if (!window.__qrcodegen) {
+    loadQrcodegen(function () { renderQr(); });
+    return;
+  }
+  var sessionUrl = getSessionUrl();
+  var qr = window.__qrcodegen.QrCode.encodeText(sessionUrl, window.__qrcodegen.QrCode.Ecc.LOW);
+  var size = qr.size;
+  var border = 4;
+  var totalSize = size + border * 2;
+  var parts: string[] = [];
 
   if (link) link.href = sessionUrl;
   if (value) value.textContent = sessionUrl;
 
   if (image) {
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
+    for (var y = 0; y < size; y++) {
+      for (var x = 0; x < size; x++) {
         if (qr.getModule(x, y)) {
-          parts.push(`M${x + border},${y + border}h1v1h-1z`);
+          parts.push('M' + (x + border) + ',' + (y + border) + 'h1v1h-1z');
         }
       }
     }
 
-    image.setAttribute("viewBox", `0 0 ${totalSize} ${totalSize}`);
-    image.innerHTML = `
-      <rect width="100%" height="100%" fill="#ffffff"></rect>
-      <path d="${parts.join(" ")}" fill="#000000"></path>
-    `;
+    image.setAttribute("viewBox", "0 0 " + totalSize + " " + totalSize);
+    image.innerHTML = '<rect width="100%" height="100%" fill="#ffffff"></rect><path d="' + parts.join(" ") + '" fill="#000000"></path>';
   }
-};
+}
 
-const resetDataViews = () => {
+function xhrRequest(method: string, url: string, headers: Record<string, string>, body: string | null, callback: (err: any, data: any) => void): void {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    for (var key in headers) {
+      if (headers.hasOwnProperty(key)) {
+        xhr.setRequestHeader(key, headers[key]);
+      }
+    }
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          var contentType = xhr.getResponseHeader('Content-Type') || '';
+          if (contentType.indexOf('application/json') !== -1 || contentType.indexOf('text/json') !== -1) {
+            try {
+              callback(null, JSON.parse(xhr.responseText));
+            } catch (e) {
+              callback(null, xhr.responseText);
+            }
+          } else {
+            callback(null, xhr.responseText);
+          }
+        } else {
+          callback(new Error('Request failed: ' + xhr.status + ' ' + xhr.statusText), null);
+        }
+      }
+    };
+    xhr.onerror = function () {
+      callback(new Error('Network error'), null);
+    };
+    xhr.send(body);
+  } catch (e) {
+    callback(e, null);
+  }
+}
+
+function getAuthHeaders(): Record<string, string> {
+  var headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (apiKey) {
+    headers['Authorization'] = 'Bearer ' + apiKey;
+  }
+  return headers;
+}
+
+function resetDataViews(): void {
   fetchedData = false;
   modelsList = [];
   personasList = [];
@@ -182,9 +230,9 @@ const resetDataViews = () => {
   if (personasMetaEl) personasMetaEl.textContent = "0 active";
 
   updateConfigBar();
-};
+}
 
-const clearSiteData = () => {
+function clearSiteData(): void {
   if (!confirm("This will permanently delete all saved messages, model selection, persona, and conversation history. Continue?")) {
     return;
   }
@@ -193,105 +241,117 @@ const clearSiteData = () => {
   resetDataViews();
   conversationTitle = '';
   if (settingsStatus) settingsStatus.textContent = "All site data cleared.";
-};
+}
 
-const renderModels = () => {
+function renderModels(): void {
   if (modelsPlaceholder) {
     modelsPlaceholder.hidden = true;
     modelsPlaceholder.style.display = "none";
   }
 
   if (modelsMetaEl) {
-    modelsMetaEl.textContent = `${modelsList.length} available`;
+    modelsMetaEl.textContent = modelsList.length + " available";
   }
 
   if (!modelsListEl) return;
   modelsListEl.innerHTML = "";
 
-  modelsList.forEach((model) => {
-    const card = document.createElement("div");
-    card.className = `card${selectedModel === model.model_name ? " active-item" : ""}`;
+  for (var i = 0; i < modelsList.length; i++) {
+    var model = modelsList[i];
+    var card = document.createElement("div");
+    card.className = "card" + (selectedModel === model.model_name ? " active-item" : "");
 
-    const title = document.createElement("div");
+    var title = document.createElement("div");
     title.className = "card-title";
     title.textContent = model.label || model.model_name;
     card.appendChild(title);
 
-    const desc = document.createElement("div");
+    var desc = document.createElement("div");
     desc.className = "card-desc";
-    let info = `Vendor: ${model.vendor}`;
+    var info = "Vendor: " + model.vendor;
     if (model.context_window) {
-      info += ` · Context: ${Math.round(model.context_window / 1000)}k`;
+      info += " \u00B7 Context: " + Math.round(model.context_window / 1000) + "k";
     }
     if (model.type) {
-      info += ` · ${model.type}`;
+      info += " \u00B7 " + model.type;
     }
     desc.textContent = info;
     card.appendChild(desc);
 
-    const selectBtn = document.createElement("button");
+    var selectBtn = document.createElement("button");
     selectBtn.className = "card-btn";
     selectBtn.type = "button";
     selectBtn.textContent = selectedModel === model.model_name ? "Selected" : "Select Model";
-    selectBtn.onclick = () => {
-      selectedModel = selectedModel === model.model_name ? null : model.model_name;
-      updateConfigBar();
-      persistState();
-      renderModels();
-    };
+    selectBtn.onclick = ((modelName: string) => {
+      return function () {
+        selectedModel = selectedModel === modelName ? null : modelName;
+        updateConfigBar();
+        persistState();
+        renderModels();
+      };
+    })(model.model_name);
     card.appendChild(selectBtn);
 
     modelsListEl.appendChild(card);
-  });
-};
+  }
+}
 
-const renderPersonas = () => {
+function renderPersonas(): void {
   if (personasPlaceholder) {
     personasPlaceholder.hidden = true;
     personasPlaceholder.style.display = "none";
   }
 
   if (personasMetaEl) {
-    personasMetaEl.textContent = `${personasList.length} configured`;
+    personasMetaEl.textContent = personasList.length + " configured";
   }
 
   if (!personasListEl) return;
   personasListEl.innerHTML = "";
 
-  personasList.forEach((persona) => {
-    const card = document.createElement("div");
-    card.className = `card${selectedPersona === persona.id ? " active-item" : ""}`;
+  for (var i = 0; i < personasList.length; i++) {
+    var persona = personasList[i];
+    var card = document.createElement("div");
+    card.className = "card" + (selectedPersona === persona.id ? " active-item" : "");
 
-    const title = document.createElement("div");
+    var title = document.createElement("div");
     title.className = "card-title";
     title.textContent = persona.name || persona.id;
     card.appendChild(title);
 
-    const desc = document.createElement("div");
+    var desc = document.createElement("div");
     desc.className = "card-desc";
     desc.textContent = persona.prompt || "No prompt description.";
     card.appendChild(desc);
 
-    const selectBtn = document.createElement("button");
+    var selectBtn = document.createElement("button");
     selectBtn.className = "card-btn";
     selectBtn.type = "button";
     selectBtn.textContent = selectedPersona === persona.id ? "Selected" : "Select Persona";
-    selectBtn.onclick = () => {
-      selectedPersona = selectedPersona === persona.id ? null : persona.id;
-      updateConfigBar();
-      persistState();
-      renderPersonas();
-    };
+    selectBtn.onclick = ((personaId: string) => {
+      return function () {
+        selectedPersona = selectedPersona === personaId ? null : personaId;
+        updateConfigBar();
+        persistState();
+        renderPersonas();
+      };
+    })(persona.id);
     card.appendChild(selectBtn);
 
     personasListEl.appendChild(card);
-  });
-};
+  }
+}
 
-const updateConfigBar = () => {
+function updateConfigBar(): void {
   if (chatModelSelected) {
     if (selectedModel) {
-      const match = modelsList.find(m => m.model_name === selectedModel);
+      var match = null;
+      for (var i = 0; i < modelsList.length; i++) {
+        if (modelsList[i].model_name === selectedModel) {
+          match = modelsList[i];
+          break;
+        }
+      }
       chatModelSelected.textContent = match ? match.label : selectedModel;
     } else {
       chatModelSelected.textContent = "Default";
@@ -300,7 +360,13 @@ const updateConfigBar = () => {
 
   if (chatPersonaSelected) {
     if (selectedPersona) {
-      const match = personasList.find(p => p.id === selectedPersona);
+      var match = null;
+      for (var i = 0; i < personasList.length; i++) {
+        if (personasList[i].id === selectedPersona) {
+          match = personasList[i];
+          break;
+        }
+      }
       chatPersonaSelected.textContent = match ? match.name : selectedPersona;
     } else {
       chatPersonaSelected.textContent = "Default";
@@ -308,68 +374,60 @@ const updateConfigBar = () => {
   }
 
   if (chatMessageCount) {
-    chatMessageCount.textContent = `${messages.length}`;
+    chatMessageCount.textContent = String(messages.length);
   }
-};
+}
 
-const fetchModelsAndPersonas = async () => {
+function fetchModelsAndPersonas(): void {
   if (!apiKey) return;
   fetchedData = true;
 
   if (modelsMetaEl) modelsMetaEl.textContent = "loading...";
   if (personasMetaEl) personasMetaEl.textContent = "loading...";
 
-  const client = createClient({
-    auth: apiKey,
-    baseUrl: getApiBaseUrl(),
-  });
+  var baseUrl = getApiBaseUrl();
+  var headers = getAuthHeaders();
+  var loaded = 0;
 
-  try {
-    const modelsRes = await getAvailableModels({ client });
-    if (modelsRes.error) {
-      console.error("Failed to fetch models", modelsRes.error);
+  var checkDone = function () {
+    loaded++;
+    if (loaded === 2) {
+      // both requests completed
+    }
+  };
+
+  xhrRequest('GET', baseUrl + '/models/available', headers, null, function (err, data) {
+    if (err) {
+      console.error("Failed to fetch models", err);
       if (modelsPlaceholder) {
         modelsPlaceholder.hidden = false;
         modelsPlaceholder.style.display = "block";
         modelsPlaceholder.textContent = "Failed to load models.";
       }
     } else {
-      modelsList = modelsRes.data?.models || [];
+      modelsList = data?.models || [];
       renderModels();
     }
-  } catch (err) {
-    console.error(err);
-    if (modelsPlaceholder) {
-      modelsPlaceholder.hidden = false;
-      modelsPlaceholder.style.display = "block";
-      modelsPlaceholder.textContent = "Error loading models.";
-    }
-  }
+    checkDone();
+  });
 
-  try {
-    const personasRes = await getAvailablePersonas({ client });
-    if (personasRes.error) {
-      console.error("Failed to fetch personas", personasRes.error);
+  xhrRequest('GET', baseUrl + '/personas/available', headers, null, function (err, data) {
+    if (err) {
+      console.error("Failed to fetch personas", err);
       if (personasPlaceholder) {
         personasPlaceholder.hidden = false;
         personasPlaceholder.style.display = "block";
         personasPlaceholder.textContent = "Failed to load personas.";
       }
     } else {
-      personasList = personasRes.data?.personas || [];
+      personasList = data?.personas || [];
       renderPersonas();
     }
-  } catch (err) {
-    console.error(err);
-    if (personasPlaceholder) {
-      personasPlaceholder.hidden = false;
-      personasPlaceholder.style.display = "block";
-      personasPlaceholder.textContent = "Error loading personas.";
-    }
-  }
-};
+    checkDone();
+  });
+}
 
-const updateChatHint = (): void => {
+function updateChatHint(): void {
   if (!chatHint) return;
 
   if (!apiKey) {
@@ -377,22 +435,22 @@ const updateChatHint = (): void => {
     return;
   }
 
-  const atLimit = messages.length >= MAX_CONVERSATION_MESSAGES;
+  var atLimit = messages.length >= MAX_CONVERSATION_MESSAGES;
   if (atLimit) {
-    chatHint.innerHTML = `Message limit reached (${MAX_CONVERSATION_MESSAGES}). Start a new chat to continue.`;
+    chatHint.innerHTML = "Message limit reached (" + MAX_CONVERSATION_MESSAGES + "). Start a new chat to continue.";
   } else {
-    chatHint.innerHTML = `Chat input is unlocked. ${messages.length}/${MAX_CONVERSATION_MESSAGES}`;
+    chatHint.innerHTML = "Chat input is unlocked. " + messages.length + "/" + MAX_CONVERSATION_MESSAGES;
   }
 
   if (chatInput) chatInput.disabled = atLimit;
   if (chatSend) chatSend.disabled = atLimit;
-};
+}
 
-const syncState = () => {
-  const unlocked = !!apiKey;
+function syncState(): void {
+  var unlocked = !!apiKey;
 
   if (statusEl) {
-    statusEl.textContent = apiKey ? "api key set · tap for QR" : "api key missing · tap for QR";
+    statusEl.textContent = apiKey ? "api key set \u00B7 tap for QR" : "api key missing \u00B7 tap for QR";
     statusEl.setAttribute("aria-expanded", String(open));
   }
 
@@ -426,74 +484,78 @@ const syncState = () => {
   } else {
     resetDataViews();
   }
-};
+}
 
-const getShortTime = (): string => {
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = now.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
+function getShortTime(): string {
+  var now = new Date();
+  var hours = now.getHours();
+  var minutes = now.getMinutes();
+  var ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12;
-  const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
-  return `${hours}:${minutesStr} ${ampm}`;
-};
+  var minutesStr = minutes < 10 ? "0" + minutes : String(minutes);
+  return hours + ":" + minutesStr + " " + ampm;
+}
 
-const appendMessage = (text: string, type: string, savedTimestamp?: number): string => {
+function appendMessage(text: string, type: string, savedTimestamp?: number): string {
   if (!chatMessageList) return "";
   messageCounter++;
-  const id = `msg-${messageCounter}`;
+  var id = "msg-" + messageCounter;
 
-  const article = document.createElement("article");
-  article.className = `message ${type}`;
+  var article = document.createElement("article");
+  article.className = "message " + type;
   article.id = id;
 
-  const p = document.createElement("p");
+  var p = document.createElement("p");
   p.style.whiteSpace = "pre-wrap";
   p.textContent = text;
   article.appendChild(p);
 
-  const span = document.createElement("span");
-  const sender = type.includes("outgoing") ? "you" : "zo";
-  const ts = savedTimestamp ? new Date(savedTimestamp) : new Date();
-  let hours = ts.getHours();
-  const minutes = ts.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
+  var span = document.createElement("span");
+  var sender = type.indexOf("outgoing") !== -1 ? "you" : "zo";
+  var ts = savedTimestamp ? new Date(savedTimestamp) : new Date();
+  var hours = ts.getHours();
+  var minutes = ts.getMinutes();
+  var ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12;
-  const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
-  span.textContent = `${sender} · ${hours}:${minutesStr} ${ampm}`;
+  var minutesStr = minutes < 10 ? "0" + minutes : String(minutes);
+  span.textContent = sender + " \u00B7 " + hours + ":" + minutesStr + " " + ampm;
   article.appendChild(span);
 
   chatMessageList.appendChild(article);
   chatMessageList.scrollTop = chatMessageList.scrollHeight;
 
   if (!savedTimestamp) {
-    messages.push({ text, type, timestamp: Date.now() });
+    messages.push({ text: text, type: type, timestamp: Date.now() });
     persistState();
   }
 
   return id;
-};
+}
 
-const persistState = (): void => {
-  const state = { messages, conversationId, selectedModel, selectedPersona };
+function persistState(): void {
+  var state = { messages: messages, conversationId: conversationId, selectedModel: selectedModel, selectedPersona: selectedPersona };
   saveState(state);
 
   if (conversationId) {
     upsertConversationMeta(conversationId, conversationTitle, messages, selectedModel, selectedPersona);
   }
-};
+}
 
-const deriveTitle = (msgs: SavedMessage[]): string => {
-  const firstUser = msgs.find(m => m.type === 'outgoing');
-  return firstUser ? firstUser.text.substring(0, 60) : 'Chat';
-};
+function deriveTitle(msgs: any[]): string {
+  for (var i = 0; i < msgs.length; i++) {
+    if (msgs[i].type === 'outgoing') {
+      return msgs[i].text.substring(0, 60);
+    }
+  }
+  return 'Chat';
+}
 
-const restoreState = (): void => {
+function restoreState(): void {
   migrateOldState();
 
-  const saved = loadState();
+  var saved = loadState();
   if (!saved) return;
 
   conversationId = saved.conversationId;
@@ -502,26 +564,25 @@ const restoreState = (): void => {
   messages = saved.messages;
   conversationTitle = deriveTitle(messages);
 
-  for (const msg of messages) {
-    appendMessage(msg.text, msg.type, msg.timestamp);
+  for (var i = 0; i < messages.length; i++) {
+    appendMessage(messages[i].text, messages[i].type, messages[i].timestamp);
   }
 
   updateConfigBar();
-};
+}
 
-const removeMessage = (id: string) => {
+function removeMessage(id: string): void {
   if (!id) return;
-  const el = document.getElementById(id);
-  if (el?.parentNode) {
+  var el = document.getElementById(id);
+  if (el && el.parentNode) {
     el.parentNode.removeChild(el);
   }
-  // Remove the last message from tracking (used for loading indicators)
   messages.pop();
-};
+}
 
-const sendMessage = async () => {
+function sendMessage(): void {
   if (!apiKey || !chatInput) return;
-  const text = chatInput.value.trim();
+  var text = chatInput.value.trim();
   if (!text) return;
 
   if (messages.length >= MAX_CONVERSATION_MESSAGES) {
@@ -537,194 +598,266 @@ const sendMessage = async () => {
   if (chatSend) chatSend.disabled = true;
 
   messageCounter++;
-  const tempId = `msg-${messageCounter}`;
-  const tempArticle = document.createElement("article");
+  var tempId = "msg-" + messageCounter;
+  var tempArticle = document.createElement("article");
   tempArticle.className = "message incoming";
   tempArticle.id = tempId;
-  const tempP = document.createElement("p");
+  var tempP = document.createElement("p");
   tempP.style.whiteSpace = "pre-wrap";
   tempArticle.appendChild(tempP);
-  const tempSpan = document.createElement("span");
-  tempSpan.textContent = `zo · ${getShortTime()}`;
+  var tempSpan = document.createElement("span");
+  tempSpan.textContent = "zo \u00B7 " + getShortTime();
   tempArticle.appendChild(tempSpan);
   if (chatMessageList) {
     chatMessageList.appendChild(tempArticle);
     chatMessageList.scrollTop = chatMessageList.scrollHeight;
   }
 
-  const client = createClient({
-    auth: apiKey,
-    baseUrl: getApiBaseUrl(),
-  });
+  var baseUrl = getApiBaseUrl();
+  var url = baseUrl + '/zo/ask';
 
   try {
-    const result = await client.sse.post({
-      security: [{ scheme: 'bearer', type: 'http' }],
-      url: '/zo/ask',
-      body: {
-        input: text,
-        conversation_id: conversationId || undefined,
-        model_name: selectedModel || undefined,
-        persona_id: selectedPersona || undefined,
-        stream: true,
-      },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + apiKey);
 
-    let fullOutput = "";
-    let finalConversationId: string | undefined;
+    var lastIndex = 0;
+    var fullOutput = '';
+    var finalConversationId: string | undefined;
 
-    if (result.stream) {
-      for await (const event of result.stream) {
-        const data = event as any;
-        if (data?.output !== undefined) {
-          fullOutput = typeof data.output === "string" ? data.output : JSON.stringify(data.output);
-          tempP.textContent = fullOutput;
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 3 || xhr.readyState === 4) {
+        var newData = xhr.responseText.substring(lastIndex);
+        lastIndex = xhr.responseText.length;
+
+        if (newData.length > 0) {
+          var lines = newData.split('\n');
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf('data: ') === 0) {
+              var dataStr = line.substring(6);
+              if (dataStr === '[DONE]') continue;
+              try {
+                var data = JSON.parse(dataStr);
+                if (data.output !== undefined) {
+                  fullOutput = typeof data.output === 'string' ? data.output : JSON.stringify(data.output);
+                  tempP.textContent = fullOutput;
+                }
+                if (data.conversation_id) {
+                  finalConversationId = data.conversation_id;
+                }
+                if (data.error) {
+                  console.error('Stream error:', data.error);
+                }
+              } catch (e) {
+                // Partial line, ignore parse errors
+              }
+            }
+          }
         }
-        if (data?.conversation_id) {
-          finalConversationId = data.conversation_id;
-        }
-        if (data?.error) {
-          throw new Error(data.error);
+
+        if (xhr.readyState === 4) {
+          try {
+            if (tempArticle.parentNode) {
+              tempArticle.parentNode.removeChild(tempArticle);
+            }
+          } catch (e) {}
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (finalConversationId) {
+              conversationId = finalConversationId;
+              if (!conversationTitle && messages.length > 0) {
+                conversationTitle = deriveTitle(messages);
+              }
+            }
+
+            appendMessage(fullOutput || "No response output received.", "incoming");
+            persistState();
+          } else {
+            appendMessage("Error: Request failed (" + xhr.status + ")", "incoming error-message");
+          }
+
+          if (chatInput) chatInput.disabled = false;
+          if (chatSend) chatSend.disabled = false;
+          if (chatInput) chatInput.focus();
         }
       }
-    }
+    };
 
-    try { tempArticle.parentNode?.removeChild(tempArticle); } catch {}
+    xhr.onerror = function () {
+      try {
+        if (tempArticle.parentNode) {
+          tempArticle.parentNode.removeChild(tempArticle);
+        }
+      } catch (e) {}
+      appendMessage("Error: Network error occurred.", "incoming error-message");
+      if (chatInput) chatInput.disabled = false;
+      if (chatSend) chatSend.disabled = false;
+    };
 
-    if (finalConversationId) {
-      conversationId = finalConversationId;
-      if (!conversationTitle && messages.length > 0) {
-        conversationTitle = deriveTitle(messages);
-      }
-    }
-
-    appendMessage(fullOutput || "No response output received.", "incoming");
-    persistState();
+    xhr.send(JSON.stringify({
+      input: text,
+      conversation_id: conversationId || undefined,
+      model_name: selectedModel || undefined,
+      persona_id: selectedPersona || undefined,
+      stream: true,
+    }));
   } catch (err: any) {
-    try { tempArticle.parentNode?.removeChild(tempArticle); } catch {}
-    appendMessage(`Error: ${err.message || "An unexpected error occurred."}`, "incoming error-message");
-  } finally {
+    try {
+      if (tempArticle.parentNode) {
+        tempArticle.parentNode.removeChild(tempArticle);
+      }
+    } catch (e) {}
+    appendMessage("Error: " + (err.message || "An unexpected error occurred."), "incoming error-message");
     if (chatInput) chatInput.disabled = false;
     if (chatSend) chatSend.disabled = false;
-    if (chatInput) chatInput.focus();
   }
-};
+}
 
-const getRelativeTime = (ts: number): string => {
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
+function getRelativeTime(ts: number): string {
+  var diff = Date.now() - ts;
+  var mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-};
+  if (mins < 60) return mins + 'm ago';
+  var hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + 'h ago';
+  var days = Math.floor(hours / 24);
+  if (days < 30) return days + 'd ago';
+  var months = Math.floor(days / 30);
+  return months + 'mo ago';
+}
 
-const renderConversations = (): void => {
-  let list = loadConversationList();
-  list.sort((a, b) => b.lastUpdated - a.lastUpdated);
+function renderConversations(): void {
+  var list = loadConversationList();
 
-  const query = (conversationsSearch?.value || '').trim().toLowerCase();
+  for (var i = 0; i < list.length - 1; i++) {
+    for (var j = i + 1; j < list.length; j++) {
+      if (list[j].lastUpdated > list[i].lastUpdated) {
+        var tmp = list[i];
+        list[i] = list[j];
+        list[j] = tmp;
+      }
+    }
+  }
+
+  var query = '';
+  if (conversationsSearch) {
+    query = (conversationsSearch.value || '').trim().toLowerCase();
+  }
+  var filtered = list;
   if (query) {
-    list = list.filter(c => c.title.toLowerCase().includes(query));
+    filtered = [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].title.toLowerCase().indexOf(query) !== -1) {
+        filtered.push(list[i]);
+      }
+    }
   }
 
   if (conversationsMetaEl) {
-    const total = loadConversationList().length;
+    var total = loadConversationList().length;
     conversationsMetaEl.textContent = query
-      ? `${list.length} of ${total} saved`
-      : `${total} saved`;
+      ? filtered.length + " of " + total + " saved"
+      : total + " saved";
   }
 
   if (!conversationsListEl) return;
   conversationsListEl.innerHTML = '';
 
-  if (list.length === 0) {
-    const empty = document.createElement('div');
+  if (filtered.length === 0) {
+    var empty = document.createElement('div');
     empty.className = 'list-placeholder';
     empty.textContent = 'No saved chats yet.';
     conversationsListEl.appendChild(empty);
     return;
   }
 
-  for (const conv of list) {
-    const card = document.createElement('div');
+  for (var i = 0; i < filtered.length; i++) {
+    var conv = filtered[i];
+    var card = document.createElement('div');
     card.className = 'card';
 
-    const row = document.createElement('div');
+    var row = document.createElement('div');
     row.className = 'card-row';
 
-    const title = document.createElement('div');
+    var title = document.createElement('div');
     title.className = 'card-title';
     title.textContent = conv.title || 'Untitled Chat';
     row.appendChild(title);
 
-    const renameBtn = document.createElement('button');
+    var renameBtn = document.createElement('button');
     renameBtn.className = 'card-btn-small';
     renameBtn.type = 'button';
     renameBtn.textContent = 'Rename';
-    renameBtn.onclick = (e) => {
-      e.stopPropagation();
-      const newTitle = prompt('Rename conversation:', conv.title || '');
-      if (newTitle && newTitle.trim()) {
-        renameConversation(conv.id, newTitle.trim());
-        renderConversations();
-      }
-    };
+    renameBtn.onclick = ((id: string, currentTitle: string) => {
+      return function (e: Event) {
+        e.stopPropagation();
+        var newTitle = prompt('Rename conversation:', currentTitle || '');
+        if (newTitle && newTitle.trim()) {
+          renameConversation(id, newTitle.trim());
+          renderConversations();
+        }
+      };
+    })(conv.id, conv.title);
     row.appendChild(renameBtn);
 
     card.appendChild(row);
 
-    const desc = document.createElement('div');
+    var desc = document.createElement('div');
     desc.className = 'card-desc';
-    desc.textContent = `${conv.messageCount} messages · ${getRelativeTime(conv.lastUpdated)}`;
+    desc.textContent = conv.messageCount + " messages \u00B7 " + getRelativeTime(conv.lastUpdated);
     card.appendChild(desc);
 
-    const btnRow = document.createElement('div');
+    var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex; gap:8px; margin-top:8px;';
 
-    const loadBtn = document.createElement('button');
+    var loadBtn = document.createElement('button');
     loadBtn.className = 'card-btn';
     loadBtn.type = 'button';
-    const isActive = conv.id === conversationId;
+    var isActive = conv.id === conversationId;
     loadBtn.textContent = isActive ? 'Current' : 'Open';
-    loadBtn.onclick = () => {
-      if (!isActive) switchConversation(conv.id);
-    };
+    loadBtn.onclick = ((id: string, active: boolean) => {
+      return function () {
+        if (!active) switchConversation(id);
+      };
+    })(conv.id, isActive);
     btnRow.appendChild(loadBtn);
 
-    const deleteBtn = document.createElement('button');
+    var deleteBtn = document.createElement('button');
     deleteBtn.className = 'card-btn-danger';
     deleteBtn.type = 'button';
     deleteBtn.textContent = 'Delete';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (confirm('Delete this conversation? This cannot be undone.')) {
-        handleDeleteConversation(conv.id);
-      }
-    };
+    deleteBtn.onclick = ((id: string) => {
+      return function (e: Event) {
+        e.stopPropagation();
+        if (confirm('Delete this conversation? This cannot be undone.')) {
+          handleDeleteConversation(id);
+        }
+      };
+    })(conv.id);
     btnRow.appendChild(deleteBtn);
 
     card.appendChild(btnRow);
 
     conversationsListEl.appendChild(card);
   }
-};
+}
 
-const switchConversation = (id: string): void => {
+function switchConversation(id: string): void {
   if (conversationId) {
     persistState();
   }
 
-  const msgs = loadConversationMessages(id);
-  const list = loadConversationList();
-  const meta = list.find(c => c.id === id);
+  var msgs = loadConversationMessages(id);
+  var list = loadConversationList();
+  var meta = null;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) {
+      meta = list[i];
+      break;
+    }
+  }
 
   conversationId = id;
   messages = msgs || [];
@@ -734,17 +867,17 @@ const switchConversation = (id: string): void => {
 
   if (chatMessageList) {
     chatMessageList.innerHTML = '';
-    for (const msg of messages) {
-      appendMessage(msg.text, msg.type, msg.timestamp);
+    for (var i = 0; i < messages.length; i++) {
+      appendMessage(messages[i].text, messages[i].type, messages[i].timestamp);
     }
   }
 
   updateConfigBar();
   persistState();
   window.location.hash = '#chat';
-};
+}
 
-const newConversation = (): void => {
+function newConversation(): void {
   if (conversationId && messages.length > 0) {
     persistState();
   }
@@ -752,23 +885,18 @@ const newConversation = (): void => {
   conversationId = null;
   messages = [];
   conversationTitle = '';
-  selectedModel = selectedModel;
-  selectedPersona = selectedPersona;
 
   if (chatMessageList) {
-    chatMessageList.innerHTML = `<article class="message incoming">
-      <p>Need something done? Enter your API key to connect to your Zo Computer.</p>
-      <span>system · now</span>
-    </article>`;
+    chatMessageList.innerHTML = '<article class="message incoming"><p>Need something done? Enter your API key to connect to your Zo Computer.</p><span>system \u00B7 now</span></article>';
   }
 
   clearState();
   updateConfigBar();
   window.location.hash = '#chat';
-};
+}
 
-const handleDeleteConversation = (id: string): void => {
-  const wasActive = id === conversationId;
+function handleDeleteConversation(id: string): void {
+  var wasActive = id === conversationId;
   deleteStoredConversation(id);
 
   if (wasActive) {
@@ -777,35 +905,32 @@ const handleDeleteConversation = (id: string): void => {
     conversationTitle = '';
     clearState();
     if (chatMessageList) {
-      chatMessageList.innerHTML = `<article class="message incoming">
-        <p>Need something done? Enter your API key to connect to your Zo Computer.</p>
-        <span>system · now</span>
-      </article>`;
+      chatMessageList.innerHTML = '<article class="message incoming"><p>Need something done? Enter your API key to connect to your Zo Computer.</p><span>system \u00B7 now</span></article>';
     }
     updateConfigBar();
   }
 
   renderConversations();
-};
+}
 
-const openDialog = () => {
+function openDialog(): void {
   open = true;
   syncState();
   if (!apiKey && keyInput) {
     keyInput.focus();
   }
-};
+}
 
-const closeDialog = () => {
+function closeDialog(): void {
   open = false;
   syncState();
-};
+}
 
-const buildQr = () => {
-  const nextKey = normalizeApiKey(keyInput?.value || "");
+function buildQr(): void {
+  var nextKey = normalizeApiKey(keyInput?.value || "");
 
   if (!nextKey) {
-    keyInput?.focus();
+    if (keyInput) keyInput.focus();
     return;
   }
 
@@ -815,11 +940,11 @@ const buildQr = () => {
   resetDataViews();
   syncState();
   fetchModelsAndPersonas();
-};
+}
 
 // Event Binding
 if (statusEl) {
-  statusEl.onclick = () => {
+  statusEl.onclick = function () {
     if (open) {
       closeDialog();
     } else {
@@ -833,8 +958,8 @@ if (closeButton) closeButton.onclick = closeDialog;
 if (buildButton) buildButton.onclick = buildQr;
 
 if (keyInput) {
-  keyInput.onkeydown = (event) => {
-    const keyCode = event?.keyCode || event?.which || 0;
+  keyInput.onkeydown = function (event) {
+    var keyCode = event?.keyCode || event?.which || 0;
     if (keyCode === 13) {
       buildQr();
     }
@@ -844,8 +969,8 @@ if (keyInput) {
 if (chatSend) chatSend.onclick = sendMessage;
 
 if (chatInput) {
-  chatInput.onkeydown = (event) => {
-    const keyCode = event?.keyCode || event?.which || 0;
+  chatInput.onkeydown = function (event) {
+    var keyCode = event?.keyCode || event?.which || 0;
     if (keyCode === 13) {
       sendMessage();
     }
@@ -861,45 +986,57 @@ if (conversationsNewBtn) {
 }
 
 if (conversationsSearch) {
-  conversationsSearch.oninput = () => {
+  conversationsSearch.oninput = function () {
     renderConversations();
   };
 }
 
 if (chatNewBtn) {
-  chatNewBtn.onclick = (e) => {
+  chatNewBtn.onclick = function (e) {
     e.preventDefault();
     newConversation();
   };
 }
 
-const handleRoute = () => {
-  let hash = window.location.hash || "#chat";
-  const panels = ["chat", "models", "personas", "conversations", "settings"];
-  if (!panels.includes(hash.substring(1))) {
+function handleRoute(): void {
+  var hash = window.location.hash || "#chat";
+  var panels = ["chat", "models", "personas", "conversations", "settings"];
+  if (hash.charAt(0) === '#') {
+    var found = false;
+    for (var i = 0; i < panels.length; i++) {
+      if (panels[i] === hash.substring(1)) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      hash = "#chat";
+    }
+  } else {
     hash = "#chat";
   }
 
-  panels.forEach((panel) => {
-    const panelEl = document.getElementById(panel);
+  for (var i = 0; i < panels.length; i++) {
+    var panelEl = document.getElementById(panels[i]);
     if (panelEl) {
-      panelEl.style.display = `#${panel}` === hash ? "block" : "none";
+      panelEl.style.display = "#" + panels[i] === hash ? "block" : "none";
     }
-  });
+  }
 
   if (hash === "#conversations") {
     renderConversations();
   }
 
-  const menu = document.getElementById("primary-menu");
+  var menu = document.getElementById("primary-menu");
   if (menu) {
-    const tiles = menu.getElementsByTagName("a");
-    Array.from(tiles).forEach((tile) => {
-      const href = tile.getAttribute("href");
+    var tiles = menu.getElementsByTagName("a");
+    for (var i = 0; i < tiles.length; i++) {
+      var tile = tiles[i];
+      var href = tile.getAttribute("href");
       tile.className = href === hash ? "tile active" : "tile";
-    });
+    }
   }
-};
+}
 
 window.onhashchange = handleRoute;
 
