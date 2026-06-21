@@ -26,6 +26,7 @@ let open = false;
 let messageCounter = 0;
 let messages: SavedMessage[] = [];
 let conversationTitle = '';
+const MAX_CONVERSATION_MESSAGES = 100;
 
 // DOM Elements
 const statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
@@ -56,6 +57,7 @@ const personasMetaEl = document.getElementById("personas-meta") as HTMLSpanEleme
 
 const chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
 const chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
+const chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
 
 const settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
 const settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
@@ -304,6 +306,10 @@ const updateConfigBar = () => {
       chatPersonaSelected.textContent = "Default";
     }
   }
+
+  if (chatMessageCount) {
+    chatMessageCount.textContent = `${messages.length}`;
+  }
 };
 
 const fetchModelsAndPersonas = async () => {
@@ -363,6 +369,25 @@ const fetchModelsAndPersonas = async () => {
   }
 };
 
+const updateChatHint = (): void => {
+  if (!chatHint) return;
+
+  if (!apiKey) {
+    chatHint.innerHTML = "Add a key to unlock chat input.";
+    return;
+  }
+
+  const atLimit = messages.length >= MAX_CONVERSATION_MESSAGES;
+  if (atLimit) {
+    chatHint.innerHTML = `Message limit reached (${MAX_CONVERSATION_MESSAGES}). Start a new chat to continue.`;
+  } else {
+    chatHint.innerHTML = `Chat input is unlocked. ${messages.length}/${MAX_CONVERSATION_MESSAGES}`;
+  }
+
+  if (chatInput) chatInput.disabled = atLimit;
+  if (chatSend) chatSend.disabled = atLimit;
+};
+
 const syncState = () => {
   const unlocked = !!apiKey;
 
@@ -391,11 +416,7 @@ const syncState = () => {
     chatSend.setAttribute("aria-disabled", String(!unlocked));
   }
 
-  if (chatHint) {
-    chatHint.innerHTML = unlocked
-      ? "Chat input is unlocked."
-      : "Add a key to unlock chat input.";
-  }
+  updateChatHint();
 
   if (apiKey) {
     renderQr();
@@ -502,6 +523,11 @@ const sendMessage = async () => {
   if (!apiKey || !chatInput) return;
   const text = chatInput.value.trim();
   if (!text) return;
+
+  if (messages.length >= MAX_CONVERSATION_MESSAGES) {
+    updateChatHint();
+    return;
+  }
 
   chatInput.value = "";
 
