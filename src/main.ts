@@ -110,7 +110,9 @@ function getQrcodegenUrl(): string {
   if (host === 'localhost' || host === '127.0.0.1') {
     return '/src/qrcodegen.ts';
   }
-  return '/assets/qrcodegen.js';
+  var path = window.location.pathname;
+  var dir = path.substring(0, path.lastIndexOf('/') + 1);
+  return dir + 'assets/qrcodegen.js';
 }
 
 function loadQrcodegen(callback: () => void): void {
