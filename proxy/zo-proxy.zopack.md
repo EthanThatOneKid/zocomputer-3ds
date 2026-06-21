@@ -24,8 +24,19 @@ export default {
     }
 
     const url = new URL(request.url);
-    const path = url.pathname.replace(/^\/zo-proxy/, '') || '/';
-    const target = new URL(path + url.search, TARGET).toString();
+    
+    // Extract target path from query parameter or fallback to sub-path
+    const path = url.searchParams.get('path') || url.pathname.replace(/^\/zo-proxy/, '') || '/';
+    
+    // Construct the target URL
+    const targetUrl = new URL(TARGET);
+    targetUrl.pathname = path;
+    
+    // Forward remaining query parameters (without 'path')
+    url.searchParams.delete('path');
+    targetUrl.search = url.searchParams.toString();
+    
+    const target = targetUrl.toString();
 
     const response = await fetch(target, {
       method: request.method,

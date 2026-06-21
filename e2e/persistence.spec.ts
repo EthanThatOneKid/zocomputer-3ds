@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
-import lz from 'lz-string';
-
-const { compressToUTF16, decompressFromUTF16 } = lz;
 
 const TEST_KEY = 'zo_sk_testkey';
-const C1 = 'c1:';
 const STORAGE_KEY = 'zo3ds_state';
 
 const stateWith = (overrides: Record<string, unknown>) => ({
@@ -20,19 +16,15 @@ const stateWith = (overrides: Record<string, unknown>) => ({
 
 const injectState = async (page: any, state: Record<string, unknown>) => {
   const raw = JSON.stringify(state);
-  const compressed = C1 + compressToUTF16(raw);
   await page.evaluate(
     ({ key, value }) => localStorage.setItem(key, value),
-    { key: STORAGE_KEY, value: compressed }
+    { key: STORAGE_KEY, value: raw }
   );
 };
 
 const readStoredState = async (page: any): Promise<any> => {
   const raw = await page.evaluate((key: string) => localStorage.getItem(key), STORAGE_KEY);
   if (!raw) return null;
-  if (raw.startsWith(C1)) {
-    return JSON.parse(decompressFromUTF16(raw.substring(C1.length))!);
-  }
   return JSON.parse(raw);
 };
 
