@@ -607,6 +607,18 @@ button {
   min-height: 1.2em;
 }
 
+.search-label {
+  display: block;
+  margin: 10px 0 4px;
+  color: #8190a6;
+  font-size: 0.82em;
+  font-weight: bold;
+}
+
+.search-input {
+  margin-bottom: 10px;
+}
+
 .card-row {
   display: flex;
   justify-content: space-between;

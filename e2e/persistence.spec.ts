@@ -325,4 +325,57 @@ test.describe('persistence', () => {
     const chatPanel = page.locator('#chat');
     await expect(chatPanel).toBeVisible();
   });
+
+  test('search input is visible in conversations panel', async ({ page }) => {
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(500);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    const searchInput = page.locator('#conversations-search');
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveAttribute('placeholder', 'filter by title…');
+  });
+
+  test('typing in search filters conversation list by title', async ({ page }) => {
+    await page.goto('/');
+    // Inject two conversations with different titles
+    await injectState(page, stateWith({ conversationId: 'conv_abc' }));
+    await page.evaluate(() => {
+      const conversations = [
+        { id: 'conv_abc', title: 'Hello World', messageCount: 2, lastUpdated: Date.now(), selectedModel: null, selectedPersona: null },
+      ];
+      localStorage.setItem('zo3ds_conversations', JSON.stringify(conversations));
+    });
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(1000);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    // Verify one card is visible
+    const cards = page.locator('#conversations-list .card');
+    await expect(cards).toHaveCount(1);
+
+    // Type a non-matching query
+    await page.locator('#conversations-search').fill('zzz');
+    await page.waitForTimeout(200);
+    await expect(cards).toHaveCount(0);
+
+    // Meta should show filtered count
+    const meta = page.locator('#conversations-meta');
+    await expect(meta).toHaveText('0 of 1 saved');
+
+    // Type a matching query
+    await page.locator('#conversations-search').fill('hello');
+    await page.waitForTimeout(200);
+    await expect(cards).toHaveCount(1);
+
+    // Clear search
+    await page.locator('#conversations-search').fill('');
+    await page.waitForTimeout(200);
+    await expect(cards).toHaveCount(1);
+    await expect(meta).toHaveText('1 saved');
+  });
 });

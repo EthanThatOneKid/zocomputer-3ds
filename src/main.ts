@@ -63,6 +63,7 @@ const settingsStatus = document.getElementById("settings-status") as HTMLParagra
 const conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
 const conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
 const conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
+const conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
 const chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
 
 /**
@@ -578,11 +579,19 @@ const getRelativeTime = (ts: number): string => {
 };
 
 const renderConversations = (): void => {
-  const list = loadConversationList();
+  let list = loadConversationList();
   list.sort((a, b) => b.lastUpdated - a.lastUpdated);
 
+  const query = (conversationsSearch?.value || '').trim().toLowerCase();
+  if (query) {
+    list = list.filter(c => c.title.toLowerCase().includes(query));
+  }
+
   if (conversationsMetaEl) {
-    conversationsMetaEl.textContent = `${list.length} saved`;
+    const total = loadConversationList().length;
+    conversationsMetaEl.textContent = query
+      ? `${list.length} of ${total} saved`
+      : `${total} saved`;
   }
 
   if (!conversationsListEl) return;
@@ -801,6 +810,12 @@ if (settingsClearBtn) {
 
 if (conversationsNewBtn) {
   conversationsNewBtn.onclick = newConversation;
+}
+
+if (conversationsSearch) {
+  conversationsSearch.oninput = () => {
+    renderConversations();
+  };
 }
 
 if (chatNewBtn) {
