@@ -1,8 +1,14 @@
 ---
-route: /zo-proxy
-type: api
-public: true
+format: zopack
+version: "1.0"
+name: zo-proxy
+description: CORS proxy for the Zo 3DS app. Forwards requests to https://api.zo.computer and adds CORS headers so the app (hosted on GitHub Pages) can call the Zo API.
+author: etok.zo.computer
+routes: 1
+exported: 2026-06-21
 ---
+
+# zo-proxy
 
 CORS proxy for the Zo 3DS app. Forwards requests to `https://api.zo.computer` and
 adds CORS headers so the app (hosted on GitHub Pages) can call the Zo API.
@@ -12,7 +18,11 @@ adds CORS headers so the app (hosted on GitHub Pages) can call the Zo API.
 > header that survives the edge). This handler translates it back into
 > `Authorization: Bearer ...` for the upstream Zo API.
 
-```ts
+## Routes
+
+### `/zo-proxy` (api, public)
+
+```typescript
 import type { Context } from "hono";
 
 const TARGET = "https://api.zo.computer";
@@ -84,3 +94,4 @@ export default async function handle(c: Context): Promise<Response> {
   });
 }
 ```
+
