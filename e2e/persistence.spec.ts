@@ -238,4 +238,91 @@ test.describe('persistence', () => {
     expect(outgoingSaved).toBeTruthy();
     expect(outgoingSaved.type).toBe('outgoing');
   });
+
+  test('conversations nav tile exists and navigates to conversations panel', async ({ page }) => {
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(500);
+
+    const navTile = page.locator('#primary-menu a[href="#conversations"]');
+    await expect(navTile).toBeVisible();
+    await expect(navTile).toHaveText('Chats');
+
+    await navTile.click();
+    await page.waitForTimeout(300);
+
+    const panel = page.locator('#conversations');
+    await expect(panel).toBeVisible();
+  });
+
+  test('conversations panel shows placeholder when empty', async ({ page }) => {
+    await page.goto('/');
+    await page.goto(`/?key=${TEST_KEY}_new`);
+    await page.waitForTimeout(500);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    const placeholder = page.locator('#conversations-list .list-placeholder');
+    await expect(placeholder).toContainText('No saved chats yet.');
+
+    const meta = page.locator('#conversations-meta');
+    await expect(meta).toHaveText('0 saved');
+  });
+
+  test('conversations panel shows migrated conversation', async ({ page }) => {
+    await page.goto('/');
+    await injectState(page, stateWith({}));
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(1000);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    const cards = page.locator('#conversations-list .card');
+    await expect(cards).toHaveCount(1);
+
+    // Title should be derived from first outgoing message
+    const title = cards.locator('.card-title');
+    await expect(title).toContainText('hello');
+
+    const desc = cards.locator('.card-desc');
+    await expect(desc).toContainText('2 messages');
+  });
+
+  test('delete conversation removes it from the list', async ({ page }) => {
+    await page.goto('/');
+    await injectState(page, stateWith({}));
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(1000);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    let cards = page.locator('#conversations-list .card');
+    await expect(cards).toHaveCount(1);
+
+    page.on('dialog', (dialog) => dialog.accept());
+    await cards.locator('.card-btn-danger').click();
+    await page.waitForTimeout(300);
+
+    const placeholder = page.locator('#conversations-list .list-placeholder');
+    await expect(placeholder).toContainText('No saved chats yet.');
+  });
+
+  test('new conversation button clears chat and navigates from conversations panel', async ({ page }) => {
+    await page.goto('/');
+    await injectState(page, stateWith({}));
+    await page.goto(`/?key=${TEST_KEY}`);
+    await page.waitForTimeout(1000);
+
+    await page.locator('#primary-menu a[href="#conversations"]').click();
+    await page.waitForTimeout(300);
+
+    await page.locator('#conversations-new-btn').click();
+    await page.waitForTimeout(300);
+
+    // Should be on chat panel
+    const chatPanel = page.locator('#chat');
+    await expect(chatPanel).toBeVisible();
+  });
 });

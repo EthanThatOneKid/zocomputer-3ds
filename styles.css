@@ -607,3 +607,53 @@ button {
   min-height: 1.2em;
 }
 
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.card-row .card-title {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.card-btn-small {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #2c3b52;
+  background: #233247;
+  color: #8bd3ff;
+  font-weight: bold;
+  font-size: 0.78em;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-btn-small:hover {
+  background: #2e415c;
+}
+
+.card-btn-danger {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #6b2222;
+  background: #4a1818;
+  color: #ff8a8a;
+  font-weight: bold;
+  font-size: 0.78em;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-btn-danger:hover {
+  background: #5e1f1f;
+  border-color: #8b3030;
+}
+

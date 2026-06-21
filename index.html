@@ -27,13 +27,14 @@
         <a class="tile active" href="#chat">Chat</a>
         <a class="tile" href="#models">Models</a>
         <a class="tile" href="#personas">Personas</a>
+        <a class="tile" href="#conversations">Chats</a>
         <a class="tile" href="#settings">Settings</a>
       </nav>
 
       <section class="panel" id="chat" aria-labelledby="chat-title">
         <div class="panel-head">
           <h2 id="chat-title">Chat</h2>
-          <span class="panel-meta" id="chat-meta">ready</span>
+          <a class="panel-link" id="chat-new-btn" href="#conversations">+ New</a>
         </div>
         <div class="chat-config-bar" id="chat-config-bar">
           Model: <span class="active-config-val" id="chat-model-selected">Default</span> &middot; 
@@ -75,6 +76,15 @@
         </div>
         <div class="list-placeholder" id="personas-placeholder">Add a key to view personas.</div>
         <div class="card-grid" id="personas-list"></div>
+      </section>
+
+      <section class="panel" id="conversations" aria-labelledby="conversations-title">
+        <div class="panel-head">
+          <h2 id="conversations-title">Chats</h2>
+          <span class="panel-meta" id="conversations-meta">&nbsp;</span>
+        </div>
+        <button class="action-button" id="conversations-new-btn" type="button">+ New Chat</button>
+        <div class="card-grid" id="conversations-list"></div>
       </section>
 
       <section class="panel" id="settings" aria-labelledby="settings-title">

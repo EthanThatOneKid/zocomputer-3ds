@@ -1,6 +1,12 @@
 import { qrcodegen } from './qrcodegen';
 import { createClient, zoAsk, getAvailableModels, getAvailablePersonas } from 'zocomputer';
-import { saveState, loadState, clearState, clearAllData, type SavedMessage } from './storage';
+import {
+  saveState, loadState, clearState, clearAllData,
+  migrateOldState, loadConversationList, loadConversationMessages,
+  upsertConversationMeta, deleteConversation as deleteStoredConversation,
+  renameConversation,
+  type SavedMessage
+} from './storage';
 
 declare global {
   interface Window {
@@ -19,6 +25,7 @@ let fetchedData = false;
 let open = false;
 let messageCounter = 0;
 let messages: SavedMessage[] = [];
+let conversationTitle = '';
 
 // DOM Elements
 const statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
@@ -52,6 +59,11 @@ const chatPersonaSelected = document.getElementById("chat-persona-selected") as 
 
 const settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
 const settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+
+const conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
+const conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
+const conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
+const chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
 
 /**
  * Parses queries out of the search parameters (e.g. `?key=...`)
@@ -144,6 +156,7 @@ const resetDataViews = () => {
   selectedPersona = null;
   conversationId = null;
   messages = [];
+  conversationTitle = '';
   messageCounter = 0;
   clearState();
 
@@ -175,6 +188,7 @@ const clearSiteData = () => {
   clearAllData();
   clearState();
   resetDataViews();
+  conversationTitle = '';
   if (settingsStatus) settingsStatus.textContent = "All site data cleared.";
 };
 
@@ -441,15 +455,22 @@ const appendMessage = (text: string, type: string, savedTimestamp?: number): str
 };
 
 const persistState = (): void => {
-  saveState({
-    messages,
-    conversationId,
-    selectedModel,
-    selectedPersona,
-  });
+  const state = { messages, conversationId, selectedModel, selectedPersona };
+  saveState(state);
+
+  if (conversationId) {
+    upsertConversationMeta(conversationId, conversationTitle, messages, selectedModel, selectedPersona);
+  }
+};
+
+const deriveTitle = (msgs: SavedMessage[]): string => {
+  const firstUser = msgs.find(m => m.type === 'outgoing');
+  return firstUser ? firstUser.text.substring(0, 60) : 'Chat';
 };
 
 const restoreState = (): void => {
+  migrateOldState();
+
   const saved = loadState();
   if (!saved) return;
 
@@ -457,6 +478,7 @@ const restoreState = (): void => {
   selectedModel = saved.selectedModel;
   selectedPersona = saved.selectedPersona;
   messages = saved.messages;
+  conversationTitle = deriveTitle(messages);
 
   for (const msg of messages) {
     appendMessage(msg.text, msg.type, msg.timestamp);
@@ -524,6 +546,9 @@ const sendMessage = async () => {
 
       if (res.data?.conversation_id) {
         conversationId = res.data.conversation_id;
+        if (!conversationTitle && messages.length > 0) {
+          conversationTitle = deriveTitle(messages);
+        }
         persistState();
       }
 
@@ -537,6 +562,173 @@ const sendMessage = async () => {
     if (chatSend) chatSend.disabled = false;
     if (chatInput) chatInput.focus();
   }
+};
+
+const getRelativeTime = (ts: number): string => {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+};
+
+const renderConversations = (): void => {
+  const list = loadConversationList();
+  list.sort((a, b) => b.lastUpdated - a.lastUpdated);
+
+  if (conversationsMetaEl) {
+    conversationsMetaEl.textContent = `${list.length} saved`;
+  }
+
+  if (!conversationsListEl) return;
+  conversationsListEl.innerHTML = '';
+
+  if (list.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'list-placeholder';
+    empty.textContent = 'No saved chats yet.';
+    conversationsListEl.appendChild(empty);
+    return;
+  }
+
+  for (const conv of list) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const row = document.createElement('div');
+    row.className = 'card-row';
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = conv.title || 'Untitled Chat';
+    row.appendChild(title);
+
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'card-btn-small';
+    renameBtn.type = 'button';
+    renameBtn.textContent = 'Rename';
+    renameBtn.onclick = (e) => {
+      e.stopPropagation();
+      const newTitle = prompt('Rename conversation:', conv.title || '');
+      if (newTitle && newTitle.trim()) {
+        renameConversation(conv.id, newTitle.trim());
+        renderConversations();
+      }
+    };
+    row.appendChild(renameBtn);
+
+    card.appendChild(row);
+
+    const desc = document.createElement('div');
+    desc.className = 'card-desc';
+    desc.textContent = `${conv.messageCount} messages · ${getRelativeTime(conv.lastUpdated)}`;
+    card.appendChild(desc);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex; gap:8px; margin-top:8px;';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'card-btn';
+    loadBtn.type = 'button';
+    const isActive = conv.id === conversationId;
+    loadBtn.textContent = isActive ? 'Current' : 'Open';
+    loadBtn.onclick = () => {
+      if (!isActive) switchConversation(conv.id);
+    };
+    btnRow.appendChild(loadBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'card-btn-danger';
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (confirm('Delete this conversation? This cannot be undone.')) {
+        handleDeleteConversation(conv.id);
+      }
+    };
+    btnRow.appendChild(deleteBtn);
+
+    card.appendChild(btnRow);
+
+    conversationsListEl.appendChild(card);
+  }
+};
+
+const switchConversation = (id: string): void => {
+  if (conversationId) {
+    persistState();
+  }
+
+  const msgs = loadConversationMessages(id);
+  const list = loadConversationList();
+  const meta = list.find(c => c.id === id);
+
+  conversationId = id;
+  messages = msgs || [];
+  conversationTitle = meta?.title || deriveTitle(messages);
+  selectedModel = meta?.selectedModel || null;
+  selectedPersona = meta?.selectedPersona || null;
+
+  if (chatMessageList) {
+    chatMessageList.innerHTML = '';
+    for (const msg of messages) {
+      appendMessage(msg.text, msg.type, msg.timestamp);
+    }
+  }
+
+  updateConfigBar();
+  persistState();
+  window.location.hash = '#chat';
+};
+
+const newConversation = (): void => {
+  if (conversationId && messages.length > 0) {
+    persistState();
+  }
+
+  conversationId = null;
+  messages = [];
+  conversationTitle = '';
+  selectedModel = selectedModel;
+  selectedPersona = selectedPersona;
+
+  if (chatMessageList) {
+    chatMessageList.innerHTML = `<article class="message incoming">
+      <p>Need something done? Enter your API key to connect to your Zo Computer.</p>
+      <span>system · now</span>
+    </article>`;
+  }
+
+  clearState();
+  updateConfigBar();
+  window.location.hash = '#chat';
+};
+
+const handleDeleteConversation = (id: string): void => {
+  const wasActive = id === conversationId;
+  deleteStoredConversation(id);
+
+  if (wasActive) {
+    conversationId = null;
+    messages = [];
+    conversationTitle = '';
+    clearState();
+    if (chatMessageList) {
+      chatMessageList.innerHTML = `<article class="message incoming">
+        <p>Need something done? Enter your API key to connect to your Zo Computer.</p>
+        <span>system · now</span>
+      </article>`;
+    }
+    updateConfigBar();
+  }
+
+  renderConversations();
 };
 
 const openDialog = () => {
@@ -607,9 +799,20 @@ if (settingsClearBtn) {
   settingsClearBtn.onclick = clearSiteData;
 }
 
+if (conversationsNewBtn) {
+  conversationsNewBtn.onclick = newConversation;
+}
+
+if (chatNewBtn) {
+  chatNewBtn.onclick = (e) => {
+    e.preventDefault();
+    newConversation();
+  };
+}
+
 const handleRoute = () => {
   let hash = window.location.hash || "#chat";
-  const panels = ["chat", "models", "personas", "settings"];
+  const panels = ["chat", "models", "personas", "conversations", "settings"];
   if (!panels.includes(hash.substring(1))) {
     hash = "#chat";
   }
@@ -620,6 +823,10 @@ const handleRoute = () => {
       panelEl.style.display = `#${panel}` === hash ? "block" : "none";
     }
   });
+
+  if (hash === "#conversations") {
+    renderConversations();
+  }
 
   const menu = document.getElementById("primary-menu");
   if (menu) {
