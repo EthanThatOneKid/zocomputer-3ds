@@ -1,5 +1,5 @@
 import { qrcodegen } from './qrcodegen';
-import { createClient, zoAsk, getAvailableModels, getAvailablePersonas } from 'zocomputer';
+import { createClient, getAvailableModels, getAvailablePersonas } from 'zocomputer';
 import {
   saveState, loadState, clearState, clearAllData,
   migrateOldState, loadConversationList, loadConversationMessages,
@@ -536,7 +536,21 @@ const sendMessage = async () => {
   if (chatInput) chatInput.disabled = true;
   if (chatSend) chatSend.disabled = true;
 
-  const loadingId = appendMessage("Zo is thinking...", "incoming loading-indicator");
+  messageCounter++;
+  const tempId = `msg-${messageCounter}`;
+  const tempArticle = document.createElement("article");
+  tempArticle.className = "message incoming";
+  tempArticle.id = tempId;
+  const tempP = document.createElement("p");
+  tempP.style.whiteSpace = "pre-wrap";
+  tempArticle.appendChild(tempP);
+  const tempSpan = document.createElement("span");
+  tempSpan.textContent = `zo · ${getShortTime()}`;
+  tempArticle.appendChild(tempSpan);
+  if (chatMessageList) {
+    chatMessageList.appendChild(tempArticle);
+    chatMessageList.scrollTop = chatMessageList.scrollHeight;
+  }
 
   const client = createClient({
     auth: apiKey,
@@ -544,45 +558,53 @@ const sendMessage = async () => {
   });
 
   try {
-    const res = await zoAsk({
-      client,
+    const result = await client.sse.post({
+      security: [{ scheme: 'bearer', type: 'http' }],
+      url: '/zo/ask',
       body: {
         input: text,
         conversation_id: conversationId || undefined,
         model_name: selectedModel || undefined,
         persona_id: selectedPersona || undefined,
-      }
+        stream: true,
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
-    removeMessage(loadingId);
+    let fullOutput = "";
+    let finalConversationId: string | undefined;
 
-    if (res.error) {
-      const errorMsg = (res.error as any).error || "Failed to get a response from Zo.";
-      appendMessage(`Error: ${errorMsg}`, "incoming error-message");
-    } else {
-      let outputText = "";
-      if (res.data?.output) {
-        if (typeof res.data.output === "string") {
-          outputText = res.data.output;
-        } else {
-          outputText = JSON.stringify(res.data.output, null, 2);
+    if (result.stream) {
+      for await (const event of result.stream) {
+        const data = event as any;
+        if (data?.output !== undefined) {
+          fullOutput = typeof data.output === "string" ? data.output : JSON.stringify(data.output);
+          tempP.textContent = fullOutput;
         }
-      } else {
-        outputText = "No response output received.";
-      }
-
-      if (res.data?.conversation_id) {
-        conversationId = res.data.conversation_id;
-        if (!conversationTitle && messages.length > 0) {
-          conversationTitle = deriveTitle(messages);
+        if (data?.conversation_id) {
+          finalConversationId = data.conversation_id;
         }
-        persistState();
+        if (data?.error) {
+          throw new Error(data.error);
+        }
       }
-
-      appendMessage(outputText, "incoming");
     }
+
+    try { tempArticle.parentNode?.removeChild(tempArticle); } catch {}
+
+    if (finalConversationId) {
+      conversationId = finalConversationId;
+      if (!conversationTitle && messages.length > 0) {
+        conversationTitle = deriveTitle(messages);
+      }
+    }
+
+    appendMessage(fullOutput || "No response output received.", "incoming");
+    persistState();
   } catch (err: any) {
-    removeMessage(loadingId);
+    try { tempArticle.parentNode?.removeChild(tempArticle); } catch {}
     appendMessage(`Error: ${err.message || "An unexpected error occurred."}`, "incoming error-message");
   } finally {
     if (chatInput) chatInput.disabled = false;
