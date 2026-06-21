@@ -194,6 +194,11 @@ function getAuthHeaders(): Record<string, string> {
   };
   if (apiKey) {
     headers['Authorization'] = 'Bearer ' + apiKey;
+    // Zo's edge strips Authorization before it reaches the /zo-proxy route handler,
+    // so mirror the key into X-Zo-Api-Key (a custom header that survives the edge);
+    // the proxy translates it back to Authorization for the upstream Zo API. Harmless
+    // on the direct (3DS) path, where the origin ignores the extra header.
+    headers['X-Zo-Api-Key'] = apiKey;
   }
   return headers;
 }
@@ -620,6 +625,8 @@ function sendMessage(): void {
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('Authorization', 'Bearer ' + apiKey);
+    // Mirror into X-Zo-Api-Key so it survives Zo's edge when going through /zo-proxy.
+    xhr.setRequestHeader('X-Zo-Api-Key', apiKey);
 
     var lastIndex = 0;
     var fullOutput = '';
