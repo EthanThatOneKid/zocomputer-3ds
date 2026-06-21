@@ -125,7 +125,7 @@
 		// QR Code version is automatically chosen for the output. The ECC level of the result may be higher than the
 		// ecl argument if it can be done without increasing the version.
 		QrCode.encodeText = function(text: string, ecl: QrCode.Ecc): QrCode {
-			var segs: Array<QrSegment> = qrcodegen.QrSegment.makeSegments(text);
+			var segs: Array<QrSegment> = QrSegment.makeSegments(text);
 			return QrCode.encodeSegments(segs, ecl);
 		};
 		
@@ -135,7 +135,7 @@
 		// bytes allowed is 2953. The smallest possible QR Code version is automatically chosen for the output.
 		// The ECC level of the result may be higher than the ecl argument if it can be done without increasing the version.
 		QrCode.encodeBinary = function(data: Readonly<Array<byte>>, ecl: QrCode.Ecc): QrCode {
-			var seg: QrSegment = qrcodegen.QrSegment.makeBytes(data);
+			var seg: QrSegment = QrSegment.makeBytes(data);
 			return QrCode.encodeSegments([seg], ecl);
 		};
 		

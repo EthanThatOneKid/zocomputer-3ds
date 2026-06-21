@@ -91,10 +91,7 @@ function getApiBaseUrl(): string {
   }
   var isThreeDs = /(?:Nintendo|New Nintendo|3DS)/i.test(window.navigator.userAgent);
   if (isThreeDs) return 'https://api.zo.computer';
-  if (host.indexOf('github.io') !== -1 || host.indexOf('pages.dev') !== -1) {
-    return 'https://etok.zo.space/zo-proxy?path=';
-  }
-  return 'https://api.zo.computer';
+  return 'https://etok.zo.space/zo-proxy?path=';
 }
 
 function getSessionUrl(): string {
