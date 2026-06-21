@@ -25,44 +25,44 @@ var messages: any[] = [];
 var conversationTitle = '';
 var MAX_CONVERSATION_MESSAGES = 100;
 
-var statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
-var modal = document.getElementById("qr-modal") as HTMLDivElement | null;
-var backdrop = document.getElementById("qr-backdrop") as HTMLButtonElement | null;
-var closeButton = document.getElementById("qr-close") as HTMLButtonElement | null;
-var buildButton = document.getElementById("qr-build") as HTMLButtonElement | null;
-var keyInput = document.getElementById("qr-key-input") as HTMLInputElement | null;
-var setup = document.getElementById("qr-setup") as HTMLDivElement | null;
-var result = document.getElementById("qr-result") as HTMLDivElement | null;
-var image = document.getElementById("qr-image") as unknown as SVGSVGElement | null;
-var link = document.getElementById("qr-link") as HTMLAnchorElement | null;
-var value = document.getElementById("qr-value") as HTMLParagraphElement | null;
-var copy = document.getElementById("qr-copy") as HTMLParagraphElement | null;
+var statusEl: HTMLButtonElement | null = null;
+var modal: HTMLDivElement | null = null;
+var backdrop: HTMLButtonElement | null = null;
+var closeButton: HTMLButtonElement | null = null;
+var buildButton: HTMLButtonElement | null = null;
+var keyInput: HTMLInputElement | null = null;
+var setup: HTMLDivElement | null = null;
+var result: HTMLDivElement | null = null;
+var image: SVGSVGElement | null = null;
+var link: HTMLAnchorElement | null = null;
+var value: HTMLParagraphElement | null = null;
+var copy: HTMLParagraphElement | null = null;
 
-var chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
-var chatSend = document.getElementById("chat-send") as HTMLButtonElement | null;
-var chatHint = document.getElementById("chat-hint") as HTMLParagraphElement | null;
-var chatMessageList = document.getElementById("chat-message-list") as HTMLDivElement | null;
+var chatInput: HTMLInputElement | null = null;
+var chatSend: HTMLButtonElement | null = null;
+var chatHint: HTMLParagraphElement | null = null;
+var chatMessageList: HTMLDivElement | null = null;
 
-var modelsPlaceholder = document.getElementById("models-placeholder") as HTMLDivElement | null;
-var modelsListEl = document.getElementById("models-list") as HTMLDivElement | null;
-var modelsMetaEl = document.getElementById("models-meta") as HTMLSpanElement | null;
+var modelsPlaceholder: HTMLDivElement | null = null;
+var modelsListEl: HTMLDivElement | null = null;
+var modelsMetaEl: HTMLSpanElement | null = null;
 
-var personasPlaceholder = document.getElementById("personas-placeholder") as HTMLDivElement | null;
-var personasListEl = document.getElementById("personas-list") as HTMLDivElement | null;
-var personasMetaEl = document.getElementById("personas-meta") as HTMLSpanElement | null;
+var personasPlaceholder: HTMLDivElement | null = null;
+var personasListEl: HTMLDivElement | null = null;
+var personasMetaEl: HTMLSpanElement | null = null;
 
-var chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
-var chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
-var chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
+var chatModelSelected: HTMLSpanElement | null = null;
+var chatPersonaSelected: HTMLSpanElement | null = null;
+var chatMessageCount: HTMLSpanElement | null = null;
 
-var settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
-var settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+var settingsClearBtn: HTMLButtonElement | null = null;
+var settingsStatus: HTMLParagraphElement | null = null;
 
-var conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
-var conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
-var conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
-var conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
-var chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
+var conversationsListEl: HTMLDivElement | null = null;
+var conversationsMetaEl: HTMLSpanElement | null = null;
+var conversationsNewBtn: HTMLButtonElement | null = null;
+var conversationsSearch: HTMLInputElement | null = null;
+var chatNewBtn: HTMLAnchorElement | null = null;
 
 function getQueryParam(name: string): string {
   var query = window.location.search;
@@ -948,62 +948,6 @@ function buildQr(): void {
   fetchModelsAndPersonas();
 }
 
-// Event Binding
-if (statusEl) {
-  statusEl.onclick = function () {
-    if (open) {
-      closeDialog();
-    } else {
-      openDialog();
-    }
-  };
-}
-
-if (backdrop) backdrop.onclick = closeDialog;
-if (closeButton) closeButton.onclick = closeDialog;
-if (buildButton) buildButton.onclick = buildQr;
-
-if (keyInput) {
-  keyInput.onkeydown = function (event) {
-    var keyCode = event?.keyCode || event?.which || 0;
-    if (keyCode === 13) {
-      buildQr();
-    }
-  };
-}
-
-if (chatSend) chatSend.onclick = sendMessage;
-
-if (chatInput) {
-  chatInput.onkeydown = function (event) {
-    var keyCode = event?.keyCode || event?.which || 0;
-    if (keyCode === 13) {
-      sendMessage();
-    }
-  };
-}
-
-if (settingsClearBtn) {
-  settingsClearBtn.onclick = clearSiteData;
-}
-
-if (conversationsNewBtn) {
-  conversationsNewBtn.onclick = newConversation;
-}
-
-if (conversationsSearch) {
-  conversationsSearch.oninput = function () {
-    renderConversations();
-  };
-}
-
-if (chatNewBtn) {
-  chatNewBtn.onclick = function (e) {
-    e.preventDefault();
-    newConversation();
-  };
-}
-
 function handleRoute(): void {
   var hash = window.location.hash || "#chat";
   var panels = ["chat", "models", "personas", "conversations", "settings"];
@@ -1044,15 +988,110 @@ function handleRoute(): void {
   }
 }
 
-window.onhashchange = handleRoute;
+document.addEventListener('DOMContentLoaded', function () {
+  statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
+  modal = document.getElementById("qr-modal") as HTMLDivElement | null;
+  backdrop = document.getElementById("qr-backdrop") as HTMLButtonElement | null;
+  closeButton = document.getElementById("qr-close") as HTMLButtonElement | null;
+  buildButton = document.getElementById("qr-build") as HTMLButtonElement | null;
+  keyInput = document.getElementById("qr-key-input") as HTMLInputElement | null;
+  setup = document.getElementById("qr-setup") as HTMLDivElement | null;
+  result = document.getElementById("qr-result") as HTMLDivElement | null;
+  image = document.getElementById("qr-image") as unknown as SVGSVGElement | null;
+  link = document.getElementById("qr-link") as HTMLAnchorElement | null;
+  value = document.getElementById("qr-value") as HTMLParagraphElement | null;
+  copy = document.getElementById("qr-copy") as HTMLParagraphElement | null;
 
-// Initialize
-try {
-  if (apiKey) {
-    restoreState();
+  chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
+  chatSend = document.getElementById("chat-send") as HTMLButtonElement | null;
+  chatHint = document.getElementById("chat-hint") as HTMLParagraphElement | null;
+  chatMessageList = document.getElementById("chat-message-list") as HTMLDivElement | null;
+
+  modelsPlaceholder = document.getElementById("models-placeholder") as HTMLDivElement | null;
+  modelsListEl = document.getElementById("models-list") as HTMLDivElement | null;
+  modelsMetaEl = document.getElementById("models-meta") as HTMLSpanElement | null;
+
+  personasPlaceholder = document.getElementById("personas-placeholder") as HTMLDivElement | null;
+  personasListEl = document.getElementById("personas-list") as HTMLDivElement | null;
+  personasMetaEl = document.getElementById("personas-meta") as HTMLSpanElement | null;
+
+  chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
+  chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
+  chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
+
+  settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
+  settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+
+  conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
+  conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;
+  conversationsNewBtn = document.getElementById("conversations-new-btn") as HTMLButtonElement | null;
+  conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
+  chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
+
+  if (statusEl) {
+    statusEl.onclick = function () {
+      if (open) {
+        closeDialog();
+      } else {
+        openDialog();
+      }
+    };
   }
-} catch (e) {
-  console.error('Failed to restore saved state:', e);
-}
-syncState();
-handleRoute();
+
+  if (backdrop) backdrop.onclick = closeDialog;
+  if (closeButton) closeButton.onclick = closeDialog;
+  if (buildButton) buildButton.onclick = buildQr;
+
+  if (keyInput) {
+    keyInput.onkeydown = function (event) {
+      var keyCode = event?.keyCode || event?.which || 0;
+      if (keyCode === 13) {
+        buildQr();
+      }
+    };
+  }
+
+  if (chatSend) chatSend.onclick = sendMessage;
+
+  if (chatInput) {
+    chatInput.onkeydown = function (event) {
+      var keyCode = event?.keyCode || event?.which || 0;
+      if (keyCode === 13) {
+        sendMessage();
+      }
+    };
+  }
+
+  if (settingsClearBtn) {
+    settingsClearBtn.onclick = clearSiteData;
+  }
+
+  if (conversationsNewBtn) {
+    conversationsNewBtn.onclick = newConversation;
+  }
+
+  if (conversationsSearch) {
+    conversationsSearch.oninput = function () {
+      renderConversations();
+    };
+  }
+
+  if (chatNewBtn) {
+    chatNewBtn.onclick = function (e) {
+      e.preventDefault();
+      newConversation();
+    };
+  }
+
+  window.onhashchange = handleRoute;
+
+  try {
+    if (apiKey) {
+      restoreState();
+    }
+  } catch (e) {
+    console.error('Failed to restore saved state:', e);
+  }
+  syncState();
+  handleRoute();
+});
