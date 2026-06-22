@@ -579,6 +579,7 @@ function removeMessage(id: string): void {
 function sendMessage(): void {
   if (!apiKey || !chatInput) return;
   var text = chatInput.value.trim();
+  text = "Sent from my 3DS: " + text;
   if (!text) return;
 
   if (messages.length >= MAX_CONVERSATION_MESSAGES) {
