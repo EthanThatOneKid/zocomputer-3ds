@@ -89,8 +89,6 @@ function getApiBaseUrl(): string {
   if (host === 'localhost' || host === '127.0.0.1') {
     return window.location.origin + '/zo-api';
   }
-  var isThreeDs = /(?:Nintendo|New Nintendo|3DS)/i.test(window.navigator.userAgent);
-  if (isThreeDs) return 'https://api.zo.computer';
   return 'https://etok.zo.space/zo-proxy?path=';
 }
 
@@ -119,7 +117,10 @@ function loadQrcodegen(callback: () => void): void {
   }
   var script = document.createElement('script');
   script.src = getQrcodegenUrl();
-  script.onload = function () { callback(); };
+  script.onload = callback;
+  script.onerror = function () {
+    console.error('Failed to load qrcodegen script');
+  };
   document.head.appendChild(script);
 }
 
@@ -218,7 +219,6 @@ function resetDataViews(): void {
   if (chatMessageList) chatMessageList.innerHTML = "";
 
   if (modelsPlaceholder) {
-    modelsPlaceholder.hidden = false;
     modelsPlaceholder.style.display = "block";
     modelsPlaceholder.textContent = "Add a key to view models.";
   }
@@ -226,7 +226,6 @@ function resetDataViews(): void {
   if (modelsMetaEl) modelsMetaEl.textContent = "0 active";
 
   if (personasPlaceholder) {
-    personasPlaceholder.hidden = false;
     personasPlaceholder.style.display = "block";
     personasPlaceholder.textContent = "Add a key to view personas.";
   }
@@ -249,7 +248,6 @@ function clearSiteData(): void {
 
 function renderModels(): void {
   if (modelsPlaceholder) {
-    modelsPlaceholder.hidden = true;
     modelsPlaceholder.style.display = "none";
   }
 
@@ -302,7 +300,6 @@ function renderModels(): void {
 
 function renderPersonas(): void {
   if (personasPlaceholder) {
-    personasPlaceholder.hidden = true;
     personasPlaceholder.style.display = "none";
   }
 
@@ -404,7 +401,6 @@ function fetchModelsAndPersonas(): void {
     if (err) {
       console.error("Failed to fetch models", err);
       if (modelsPlaceholder) {
-        modelsPlaceholder.hidden = false;
         modelsPlaceholder.style.display = "block";
         modelsPlaceholder.textContent = "Failed to load models.";
       }
@@ -419,7 +415,6 @@ function fetchModelsAndPersonas(): void {
     if (err) {
       console.error("Failed to fetch personas", err);
       if (personasPlaceholder) {
-        personasPlaceholder.hidden = false;
         personasPlaceholder.style.display = "block";
         personasPlaceholder.textContent = "Failed to load personas.";
       }
@@ -1032,10 +1027,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (open) { closeDialog(); } else { openDialog(); }
   }
 
-  if (statusEl) statusEl.onclick = toggleDialog;
-  if (backdrop) backdrop.onclick = closeDialog;
-  if (closeButton) closeButton.onclick = closeDialog;
-  if (buildButton) buildButton.onclick = buildQr;
+  if (statusEl) { statusEl.onclick = toggleDialog; statusEl.ontouchend = function (e) { e.preventDefault(); toggleDialog(); }; }
+  if (backdrop) { backdrop.onclick = closeDialog; backdrop.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
+  if (closeButton) { closeButton.onclick = closeDialog; closeButton.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
+  if (buildButton) { buildButton.onclick = buildQr; buildButton.ontouchend = function (e) { e.preventDefault(); buildQr(); }; }
 
   if (keyInput) {
     keyInput.onkeydown = function (event) {
