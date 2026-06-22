@@ -626,6 +626,7 @@ function sendMessage(): void {
     var lastIndex = 0;
     var fullOutput = '';
     var finalConversationId: string | undefined;
+    var lastEvent = '';
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 3 || xhr.readyState === 4) {
@@ -636,20 +637,40 @@ function sendMessage(): void {
           var lines = newData.split('\n');
           for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
-            if (line.indexOf('data: ') === 0) {
+            if (line.indexOf('event: ') === 0) {
+              lastEvent = line.substring(7).trim();
+            } else if (line.indexOf('data: ') === 0) {
               var dataStr = line.substring(6);
               if (dataStr === '[DONE]') continue;
               try {
                 var data = JSON.parse(dataStr);
-                if (data.output !== undefined) {
-                  fullOutput = typeof data.output === 'string' ? data.output : JSON.stringify(data.output);
-                  tempP.textContent = fullOutput;
-                }
                 if (data.conversation_id) {
                   finalConversationId = data.conversation_id;
                 }
                 if (data.error) {
                   console.error('Stream error:', data.error);
+                }
+                if (lastEvent === 'PartStartEvent' && data.part && data.part.part_kind === 'text' && data.part.content) {
+                  fullOutput += data.part.content;
+                  tempP.textContent = fullOutput;
+                } else if (lastEvent === 'PartDeltaEvent' && data.delta && data.delta.part_delta_kind === 'text' && data.delta.content_delta) {
+                  fullOutput += data.delta.content_delta;
+                  tempP.textContent = fullOutput;
+                } else if (lastEvent === 'PartStartEvent' && data.part && data.part.part_kind === 'tool-call') {
+                  // Tool call start — ignore for output
+                } else if (lastEvent === 'PartDeltaEvent' && data.delta && data.delta.part_delta_kind === 'tool_call') {
+                  // Tool call args delta — ignore
+                } else if (lastEvent === 'FunctionToolResultEvent' && data.result && data.result.content) {
+                  fullOutput += '\n' + data.result.content;
+                  tempP.textContent = fullOutput;
+                } else if (lastEvent === 'FrontendModelRequest' && data.parts) {
+                  for (var j = 0; j < data.parts.length; j++) {
+                    var p = data.parts[j];
+                    if (p.part_kind === 'tool-return' && p.content) {
+                      fullOutput += '\n' + p.content;
+                      tempP.textContent = fullOutput;
+                    }
+                  }
                 }
               } catch (e) {
                 // Partial line, ignore parse errors
