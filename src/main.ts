@@ -458,9 +458,9 @@ function syncState(): void {
     statusEl.setAttribute("aria-expanded", String(open));
   }
 
-  if (modal) { modal.hidden = !open; modal.style.display = open ? "block" : "none"; }
-  if (setup) { setup.hidden = !!apiKey; setup.style.display = apiKey ? "none" : "block"; }
-  if (result) { result.hidden = !apiKey; result.style.display = apiKey ? "block" : "none"; }
+  if (modal) modal.style.display = open ? "block" : "none";
+  if (setup) setup.style.display = apiKey ? "none" : "block";
+  if (result) result.style.display = apiKey ? "block" : "none";
 
   if (copy) {
     copy.textContent = apiKey
@@ -1032,14 +1032,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (open) { closeDialog(); } else { openDialog(); }
   }
 
-  if (statusEl) {
-    statusEl.onclick = toggleDialog;
-    statusEl.ontouchend = function (e) { e.preventDefault(); toggleDialog(); };
-  }
-
-  if (backdrop) { backdrop.onclick = closeDialog; backdrop.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
-  if (closeButton) { closeButton.onclick = closeDialog; closeButton.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
-  if (buildButton) { buildButton.onclick = buildQr; buildButton.ontouchend = function (e) { e.preventDefault(); buildQr(); }; }
+  if (statusEl) statusEl.onclick = toggleDialog;
+  if (backdrop) backdrop.onclick = closeDialog;
+  if (closeButton) closeButton.onclick = closeDialog;
+  if (buildButton) buildButton.onclick = buildQr;
 
   if (keyInput) {
     keyInput.onkeydown = function (event) {
