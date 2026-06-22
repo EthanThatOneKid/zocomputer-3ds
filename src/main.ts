@@ -458,9 +458,9 @@ function syncState(): void {
     statusEl.setAttribute("aria-expanded", String(open));
   }
 
-  if (modal) modal.hidden = !open;
-  if (setup) setup.hidden = !!apiKey;
-  if (result) result.hidden = !apiKey;
+  if (modal) { modal.hidden = !open; modal.style.display = open ? "block" : "none"; }
+  if (setup) { setup.hidden = !!apiKey; setup.style.display = apiKey ? "none" : "block"; }
+  if (result) { result.hidden = !apiKey; result.style.display = apiKey ? "block" : "none"; }
 
   if (copy) {
     copy.textContent = apiKey
@@ -1028,19 +1028,18 @@ document.addEventListener('DOMContentLoaded', function () {
   conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
   chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
 
-  if (statusEl) {
-    statusEl.onclick = function () {
-      if (open) {
-        closeDialog();
-      } else {
-        openDialog();
-      }
-    };
+  function toggleDialog(): void {
+    if (open) { closeDialog(); } else { openDialog(); }
   }
 
-  if (backdrop) backdrop.onclick = closeDialog;
-  if (closeButton) closeButton.onclick = closeDialog;
-  if (buildButton) buildButton.onclick = buildQr;
+  if (statusEl) {
+    statusEl.onclick = toggleDialog;
+    statusEl.ontouchend = function (e) { e.preventDefault(); toggleDialog(); };
+  }
+
+  if (backdrop) { backdrop.onclick = closeDialog; backdrop.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
+  if (closeButton) { closeButton.onclick = closeDialog; closeButton.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
+  if (buildButton) { buildButton.onclick = buildQr; buildButton.ontouchend = function (e) { e.preventDefault(); buildQr(); }; }
 
   if (keyInput) {
     keyInput.onkeydown = function (event) {
