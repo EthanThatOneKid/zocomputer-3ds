@@ -1027,10 +1027,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (open) { closeDialog(); } else { openDialog(); }
   }
 
-  if (statusEl) { statusEl.onclick = toggleDialog; statusEl.ontouchend = function (e) { e.preventDefault(); toggleDialog(); }; }
-  if (backdrop) { backdrop.onclick = closeDialog; backdrop.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
-  if (closeButton) { closeButton.onclick = closeDialog; closeButton.ontouchend = function (e) { e.preventDefault(); closeDialog(); }; }
-  if (buildButton) { buildButton.onclick = buildQr; buildButton.ontouchend = function (e) { e.preventDefault(); buildQr(); }; }
+  function onTap(el: HTMLElement, fn: () => void): void {
+    el.addEventListener('click', fn);
+    try { el.addEventListener('touchend', function (e) { try { e.preventDefault(); } catch (ex) {} fn(); }); } catch (ex) {}
+  }
+
+  if (statusEl) onTap(statusEl, toggleDialog);
+  if (backdrop) onTap(backdrop, closeDialog);
+  if (closeButton) onTap(closeButton, closeDialog);
+  if (buildButton) onTap(buildButton, buildQr);
 
   if (keyInput) {
     keyInput.onkeydown = function (event) {
