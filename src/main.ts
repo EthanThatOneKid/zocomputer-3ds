@@ -19,24 +19,17 @@ var conversationId: string | null = null;
 var modelsList: any[] = [];
 var personasList: any[] = [];
 var fetchedData = false;
-var open = false;
 var messageCounter = 0;
 var messages: any[] = [];
 var conversationTitle = '';
 var MAX_CONVERSATION_MESSAGES = 100;
 
-var statusEl: HTMLButtonElement | null = null;
-var modal: HTMLDivElement | null = null;
-var backdrop: HTMLButtonElement | null = null;
-var closeButton: HTMLButtonElement | null = null;
-var buildButton: HTMLButtonElement | null = null;
+var statusEl: HTMLSpanElement | null = null;
 var keyInput: HTMLInputElement | null = null;
-var setup: HTMLDivElement | null = null;
-var result: HTMLDivElement | null = null;
-var image: SVGSVGElement | null = null;
+var settingsKeyInput: HTMLInputElement | null = null;
+var settingsSaveBtn: HTMLButtonElement | null = null;
+var image: HTMLCanvasElement | null = null;
 var link: HTMLAnchorElement | null = null;
-var value: HTMLParagraphElement | null = null;
-var copy: HTMLParagraphElement | null = null;
 
 var chatInput: HTMLInputElement | null = null;
 var chatSend: HTMLButtonElement | null = null;
@@ -134,22 +127,26 @@ function renderQr(): void {
   var size = qr.size;
   var border = 4;
   var totalSize = size + border * 2;
-  var parts: string[] = [];
 
   if (link) link.href = sessionUrl;
-  if (value) value.textContent = sessionUrl;
 
   if (image) {
+    var ctx = image.getContext('2d');
+    if (!ctx) return;
+    var scale = Math.floor(image.width / totalSize);
+    var dim = totalSize * scale;
+    image.width = dim;
+    image.height = dim;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, dim, dim);
+    ctx.fillStyle = '#000000';
     for (var y = 0; y < size; y++) {
       for (var x = 0; x < size; x++) {
         if (qr.getModule(x, y)) {
-          parts.push('M' + (x + border) + ',' + (y + border) + 'h1v1h-1z');
+          ctx.fillRect((x + border) * scale, (y + border) * scale, scale, scale);
         }
       }
     }
-
-    image.setAttribute("viewBox", "0 0 " + totalSize + " " + totalSize);
-    image.innerHTML = '<rect width="100%" height="100%" fill="#ffffff"></rect><path d="' + parts.join(" ") + '" fill="#000000"></path>';
   }
 }
 
@@ -449,18 +446,18 @@ function syncState(): void {
   var unlocked = !!apiKey;
 
   if (statusEl) {
-    statusEl.textContent = apiKey ? "api key set \u00B7 tap for QR" : "api key missing \u00B7 tap for QR";
-    statusEl.setAttribute("aria-expanded", String(open));
+    statusEl.textContent = apiKey ? "key set" : "key missing";
   }
 
-  if (modal) modal.style.display = open ? "block" : "none";
-  if (setup) setup.style.display = apiKey ? "none" : "block";
-  if (result) result.style.display = apiKey ? "block" : "none";
-
-  if (copy) {
-    copy.textContent = apiKey
-      ? "Scan this link on another device to open Zo 3DS with the key already attached."
-      : "Enter an API key first, then build a QR code for the session link.";
+  var setupEl = document.getElementById("qr-setup");
+  var resultEl = document.getElementById("qr-result");
+  var statusEl2 = document.getElementById("qr-status");
+  if (setupEl) setupEl.style.display = apiKey ? "none" : "block";
+  if (resultEl) resultEl.style.display = apiKey ? "block" : "none";
+  if (statusEl2) {
+    statusEl2.textContent = apiKey
+      ? "Scan this QR to open Zo 3DS with your key."
+      : "Enter your API key below or in Settings.";
   }
 
   if (chatInput) {
@@ -935,33 +932,19 @@ function handleDeleteConversation(id: string): void {
   renderConversations();
 }
 
-function openDialog(): void {
-  open = true;
-  syncState();
-  if (!apiKey && keyInput) {
-    keyInput.focus();
-  }
-}
-
-function closeDialog(): void {
-  open = false;
-  syncState();
-}
-
-function buildQr(): void {
-  var nextKey = normalizeApiKey(keyInput?.value || "");
-
-  if (!nextKey) {
-    if (keyInput) keyInput.focus();
-    return;
-  }
-
+function setKey(key: string): void {
+  var nextKey = normalizeApiKey(key);
+  if (!nextKey) return;
   apiKey = nextKey;
   window.ZO_API_KEY = apiKey;
   clearState();
   resetDataViews();
   syncState();
   fetchModelsAndPersonas();
+}
+
+function buildQr(): void {
+  setKey(keyInput?.value || "");
 }
 
 function handleRoute(): void {
@@ -1005,18 +988,12 @@ function handleRoute(): void {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  statusEl = document.getElementById("api-status") as HTMLButtonElement | null;
-  modal = document.getElementById("qr-modal") as HTMLDivElement | null;
-  backdrop = document.getElementById("qr-backdrop") as HTMLButtonElement | null;
-  closeButton = document.getElementById("qr-close") as HTMLButtonElement | null;
-  buildButton = document.getElementById("qr-build") as HTMLButtonElement | null;
+  statusEl = document.getElementById("api-status") as HTMLSpanElement | null;
   keyInput = document.getElementById("qr-key-input") as HTMLInputElement | null;
-  setup = document.getElementById("qr-setup") as HTMLDivElement | null;
-  result = document.getElementById("qr-result") as HTMLDivElement | null;
-  image = document.getElementById("qr-image") as unknown as SVGSVGElement | null;
+  settingsKeyInput = document.getElementById("settings-api-key") as HTMLInputElement | null;
+  settingsSaveBtn = document.getElementById("settings-save-key") as HTMLButtonElement | null;
+  image = document.getElementById("qr-image") as HTMLCanvasElement | null;
   link = document.getElementById("qr-link") as HTMLAnchorElement | null;
-  value = document.getElementById("qr-value") as HTMLParagraphElement | null;
-  copy = document.getElementById("qr-copy") as HTMLParagraphElement | null;
 
   chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
   chatSend = document.getElementById("chat-send") as HTMLButtonElement | null;
@@ -1044,25 +1021,31 @@ document.addEventListener('DOMContentLoaded', function () {
   conversationsSearch = document.getElementById("conversations-search") as HTMLInputElement | null;
   chatNewBtn = document.getElementById("chat-new-btn") as HTMLAnchorElement | null;
 
-  function toggleDialog(): void {
-    if (open) { closeDialog(); } else { openDialog(); }
+  var setKeyBtn = document.getElementById("qr-set-key");
+  if (setKeyBtn) {
+    setKeyBtn.onclick = function () { buildQr(); };
   }
-
-  function onTap(el: HTMLElement, fn: () => void): void {
-    el.addEventListener('click', fn);
-    try { el.addEventListener('touchend', function (e) { try { e.preventDefault(); } catch (ex) {} fn(); }); } catch (ex) {}
-  }
-
-  if (statusEl) onTap(statusEl, toggleDialog);
-  if (backdrop) onTap(backdrop, closeDialog);
-  if (closeButton) onTap(closeButton, closeDialog);
-  if (buildButton) onTap(buildButton, buildQr);
 
   if (keyInput) {
     keyInput.onkeydown = function (event) {
       var keyCode = event?.keyCode || event?.which || 0;
       if (keyCode === 13) {
         buildQr();
+      }
+    };
+  }
+
+  if (settingsSaveBtn) {
+    settingsSaveBtn.onclick = function () {
+      setKey(settingsKeyInput?.value || "");
+    };
+  }
+
+  if (settingsKeyInput) {
+    settingsKeyInput.onkeydown = function (event) {
+      var keyCode = event?.keyCode || event?.which || 0;
+      if (keyCode === 13) {
+        setKey(settingsKeyInput?.value || "");
       }
     };
   }

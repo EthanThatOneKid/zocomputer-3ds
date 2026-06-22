@@ -35,7 +35,7 @@ test.describe('persistence', () => {
 
     const status = page.locator('#api-status');
     await expect(status).not.toHaveText('api key loading…');
-    await expect(status).toHaveText(/api key set/);
+    await expect(status).toHaveText(/key set/);
   });
 
   test('status shows "api key missing" without key in URL', async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe('persistence', () => {
 
     const status = page.locator('#api-status');
     await expect(status).not.toHaveText('api key loading…');
-    await expect(status).toHaveText(/api key missing/);
+    await expect(status).toHaveText(/key missing/);
   });
 
   test('saved messages render after page load', async ({ page }) => {
@@ -132,8 +132,7 @@ test.describe('persistence', () => {
     const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
     expect(stored).not.toBeNull();
 
-    // Simulate opening the QR modal and entering a new key
-    // First set the key input and trigger buildQr
+    // Navigate to a new URL with a different key to clear state
     await page.goto('/');
     await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY);
     await page.goto(`/?key=${TEST_KEY}_new`);

@@ -17,16 +17,9 @@
     <main class="shell" id="top">
       <header class="topbar" aria-label="Status bar">
         <div class="brand">ZO 3DS</div>
-        <button
-          class="status status-button"
-          id="api-status"
-          type="button"
-          aria-haspopup="dialog"
-          aria-controls="qr-modal"
-          aria-expanded="false"
-        >
+        <span class="status" id="api-status">
           api key loading…
-        </button>
+        </span>
       </header>
 
       <nav class="menu" aria-label="Primary navigation" id="primary-menu">
@@ -105,49 +98,48 @@
           If things get messy, you can clear all saved data stored on this device
           — messages, model selection, persona, and conversation history.
         </p>
+        <label class="field-label" for="settings-api-key">API Key</label>
+        <input
+          class="field-input"
+          id="settings-api-key"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          placeholder="paste the api key"
+        />
+        <button class="action-button" id="settings-save-key" type="button">Save Key</button>
         <button class="danger-button" id="settings-clear-btn" type="button">
           Clear Site Data
         </button>
         <p class="settings-status" id="settings-status">&nbsp;</p>
       </section>
 
-      <footer class="footer">
-        <p>
-          Built for handheld browsing. Minimal chrome, large targets, fast load.
-        </p>
+      <footer class="qr-footer" id="qr-footer">
+        <div class="qr-footer-layout">
+          <canvas class="qr-image" id="qr-image" width="100" height="100"
+                  aria-label="Session QR code" role="img"></canvas>
+          <div class="qr-footer-body">
+            <p class="qr-status" id="qr-status">Set your API key to share this session.</p>
+            <div class="qr-setup" id="qr-setup">
+              <input
+                class="field-input qr-key-input"
+                id="qr-key-input"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+                placeholder="paste the api key"
+              />
+              <button class="action-button qr-set-btn" id="qr-set-key" type="button">Set Key</button>
+            </div>
+            <div class="qr-result" id="qr-result" style="display:none">
+              <a class="qr-link" id="qr-link" href="#" target="_blank" rel="noreferrer">open session link</a>
+            </div>
+          </div>
+        </div>
       </footer>
     </main>
-
-    <div class="modal" id="qr-modal" style="display:none">
-      <button class="modal-backdrop" id="qr-backdrop" type="button" aria-label="Close QR dialog"></button>
-      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="qr-title">
-        <div class="panel-head">
-          <h2 id="qr-title">Session QR</h2>
-          <button class="panel-link dialog-close" id="qr-close" type="button">close</button>
-        </div>
-        <p class="dialog-copy" id="qr-copy">
-          Scan this link on another device to open Zo 3DS with the key already attached.
-        </p>
-        <div class="dialog-setup" id="qr-setup">
-          <label class="field-label" for="qr-key-input">API key</label>
-          <input
-            class="field-input"
-            id="qr-key-input"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
-            autocapitalize="off"
-            placeholder="paste the api key"
-          />
-          <button class="action-button" id="qr-build" type="button">Build QR</button>
-        </div>
-        <div class="dialog-result" id="qr-result" style="display:none">
-          <svg class="qr-image" id="qr-image" viewBox="0 0 1 1" aria-label="QR code for Zo 3DS session link" role="img"></svg>
-          <a class="qr-link" id="qr-link" href="#" target="_blank" rel="noreferrer">open QR link</a>
-          <p class="qr-value" id="qr-value"></p>
-        </div>
-      </section>
-    </div>
 
     <script type="module" src="./src/main.ts"></script>
   </body>
