@@ -170,7 +170,7 @@ test.describe('persistence', () => {
     expect(stored).toBeNull();
 
     // Status message should show
-    const status = page.locator('#settings-status');
+    const status = page.locator('#settings-clear-status');
     await expect(status).toHaveText('All site data cleared.');
 
     // Switch to chat via in-page nav — should show no messages (placeholder also cleared)

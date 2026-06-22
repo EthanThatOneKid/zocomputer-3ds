@@ -49,7 +49,7 @@ var chatPersonaSelected: HTMLSpanElement | null = null;
 var chatMessageCount: HTMLSpanElement | null = null;
 
 var settingsClearBtn: HTMLButtonElement | null = null;
-var settingsStatus: HTMLParagraphElement | null = null;
+var settingsClearStatus: HTMLParagraphElement | null = null;
 
 var conversationsListEl: HTMLDivElement | null = null;
 var conversationsMetaEl: HTMLSpanElement | null = null;
@@ -220,14 +220,14 @@ function resetDataViews(): void {
     modelsPlaceholder.textContent = "Add a key to view models.";
   }
   if (modelsListEl) modelsListEl.innerHTML = "";
-  if (modelsMetaEl) modelsMetaEl.textContent = "0 active";
+  if (modelsMetaEl) modelsMetaEl.textContent = "0 available";
 
   if (personasPlaceholder) {
     personasPlaceholder.style.display = "block";
     personasPlaceholder.textContent = "Add a key to view personas.";
   }
   if (personasListEl) personasListEl.innerHTML = "";
-  if (personasMetaEl) personasMetaEl.textContent = "0 active";
+  if (personasMetaEl) personasMetaEl.textContent = "0 configured";
 
   updateConfigBar();
 }
@@ -240,7 +240,7 @@ function clearSiteData(): void {
   clearState();
   resetDataViews();
   conversationTitle = '';
-  if (settingsStatus) settingsStatus.textContent = "All site data cleared.";
+  if (settingsClearStatus) settingsClearStatus.textContent = "All site data cleared.";
 }
 
 function renderModels(): void {
@@ -828,6 +828,25 @@ function renderConversations(): void {
     desc.textContent = conv.messageCount + " messages \u00B7 " + getRelativeTime(conv.lastUpdated);
     card.appendChild(desc);
 
+    var modelLabel = 'Default';
+    if (conv.selectedModel) {
+      for (var mi = 0; mi < modelsList.length; mi++) {
+        if (modelsList[mi].model_name === conv.selectedModel) { modelLabel = modelsList[mi].label; break; }
+      }
+      if (modelLabel === 'Default') modelLabel = conv.selectedModel;
+    }
+    var personaLabel = 'Default';
+    if (conv.selectedPersona) {
+      for (var pi = 0; pi < personasList.length; pi++) {
+        if (personasList[pi].id === conv.selectedPersona) { personaLabel = personasList[pi].name; break; }
+      }
+      if (personaLabel === 'Default') personaLabel = conv.selectedPersona;
+    }
+    var configMeta = document.createElement('div');
+    configMeta.className = 'card-meta';
+    configMeta.textContent = modelLabel + ' \u00B7 ' + personaLabel;
+    card.appendChild(configMeta);
+
     var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex; gap:8px; margin-top:8px;';
 
@@ -935,6 +954,8 @@ function handleDeleteConversation(id: string): void {
 function setKey(key: string): void {
   var nextKey = normalizeApiKey(key);
   if (!nextKey) return;
+  var statusEl3 = document.getElementById("settings-status");
+  if (statusEl3) { statusEl3.textContent = "Key saved."; }
   apiKey = nextKey;
   window.ZO_API_KEY = apiKey;
   clearState();
@@ -949,7 +970,7 @@ function buildQr(): void {
 
 function handleRoute(): void {
   var hash = window.location.hash || "#chat";
-  var panels = ["chat", "models", "personas", "conversations", "settings"];
+  var panels = ["chat", "conversations", "settings"];
   if (hash.charAt(0) === '#') {
     var found = false;
     for (var i = 0; i < panels.length; i++) {
@@ -1000,20 +1021,20 @@ document.addEventListener('DOMContentLoaded', function () {
   chatHint = document.getElementById("chat-hint") as HTMLParagraphElement | null;
   chatMessageList = document.getElementById("chat-message-list") as HTMLDivElement | null;
 
-  modelsPlaceholder = document.getElementById("models-placeholder") as HTMLDivElement | null;
-  modelsListEl = document.getElementById("models-list") as HTMLDivElement | null;
-  modelsMetaEl = document.getElementById("models-meta") as HTMLSpanElement | null;
+  modelsPlaceholder = document.getElementById("settings-model-placeholder") as HTMLDivElement | null;
+  modelsListEl = document.getElementById("settings-model-list") as HTMLDivElement | null;
+  modelsMetaEl = document.getElementById("settings-model-meta") as HTMLSpanElement | null;
 
-  personasPlaceholder = document.getElementById("personas-placeholder") as HTMLDivElement | null;
-  personasListEl = document.getElementById("personas-list") as HTMLDivElement | null;
-  personasMetaEl = document.getElementById("personas-meta") as HTMLSpanElement | null;
+  personasPlaceholder = document.getElementById("settings-persona-placeholder") as HTMLDivElement | null;
+  personasListEl = document.getElementById("settings-persona-list") as HTMLDivElement | null;
+  personasMetaEl = document.getElementById("settings-persona-meta") as HTMLSpanElement | null;
 
   chatModelSelected = document.getElementById("chat-model-selected") as HTMLSpanElement | null;
   chatPersonaSelected = document.getElementById("chat-persona-selected") as HTMLSpanElement | null;
   chatMessageCount = document.getElementById("chat-message-count") as HTMLSpanElement | null;
 
   settingsClearBtn = document.getElementById("settings-clear-btn") as HTMLButtonElement | null;
-  settingsStatus = document.getElementById("settings-status") as HTMLParagraphElement | null;
+  settingsClearStatus = document.getElementById("settings-clear-status") as HTMLParagraphElement | null;
 
   conversationsListEl = document.getElementById("conversations-list") as HTMLDivElement | null;
   conversationsMetaEl = document.getElementById("conversations-meta") as HTMLSpanElement | null;

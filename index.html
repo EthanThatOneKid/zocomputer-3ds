@@ -24,8 +24,6 @@
 
       <nav class="menu" aria-label="Primary navigation" id="primary-menu">
         <a class="tile active" href="#chat">Chat</a>
-        <a class="tile" href="#models">Models</a>
-        <a class="tile" href="#personas">Personas</a>
         <a class="tile" href="#conversations">Chats</a>
         <a class="tile" href="#settings">Settings</a>
       </nav>
@@ -60,24 +58,6 @@
         </div>
       </section>
 
-      <section class="panel" id="models" aria-labelledby="models-title">
-        <div class="panel-head">
-          <h2 id="models-title">Models</h2>
-          <span class="panel-meta" id="models-meta">0 active</span>
-        </div>
-        <div class="list-placeholder" id="models-placeholder">Add a key to view models.</div>
-        <div class="card-grid" id="models-list"></div>
-      </section>
-
-      <section class="panel" id="personas" aria-labelledby="personas-title">
-        <div class="panel-head">
-          <h2 id="personas-title">Personas</h2>
-          <span class="panel-meta" id="personas-meta">0 active</span>
-        </div>
-        <div class="list-placeholder" id="personas-placeholder">Add a key to view personas.</div>
-        <div class="card-grid" id="personas-list"></div>
-      </section>
-
       <section class="panel" id="conversations" aria-labelledby="conversations-title">
         <div class="panel-head">
           <h2 id="conversations-title">Chats</h2>
@@ -92,27 +72,55 @@
       <section class="panel" id="settings" aria-labelledby="settings-title">
         <div class="panel-head">
           <h2 id="settings-title">Settings</h2>
-          <span class="panel-meta" id="settings-meta">&nbsp;</span>
         </div>
-        <p class="settings-desc">
-          If things get messy, you can clear all saved data stored on this device
-          — messages, model selection, persona, and conversation history.
-        </p>
-        <label class="field-label" for="settings-api-key">API Key</label>
-        <input
-          class="field-input"
-          id="settings-api-key"
-          type="text"
-          spellcheck="false"
-          autocomplete="off"
-          autocapitalize="off"
-          placeholder="paste the api key"
-        />
-        <button class="action-button" id="settings-save-key" type="button">Save Key</button>
-        <button class="danger-button" id="settings-clear-btn" type="button">
-          Clear Site Data
-        </button>
-        <p class="settings-status" id="settings-status">&nbsp;</p>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">API Key</h3>
+          <label class="field-label" for="settings-api-key">API Key</label>
+          <input
+            class="field-input"
+            id="settings-api-key"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="paste the api key"
+          />
+          <button class="action-button" id="settings-save-key" type="button">Save Key</button>
+          <p class="settings-status" id="settings-status">&nbsp;</p>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">
+            Model
+            <span class="settings-section-meta" id="settings-model-meta">0 available</span>
+          </h3>
+          <p class="settings-desc">Select a model for the current conversation.</p>
+          <div class="list-placeholder" id="settings-model-placeholder">Add a key to view models.</div>
+          <div class="card-grid" id="settings-model-list"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">
+            Persona
+            <span class="settings-section-meta" id="settings-persona-meta">0 configured</span>
+          </h3>
+          <p class="settings-desc">Select a persona for the current conversation.</p>
+          <div class="list-placeholder" id="settings-persona-placeholder">Add a key to view personas.</div>
+          <div class="card-grid" id="settings-persona-list"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Storage</h3>
+          <p class="settings-desc">
+            If things get messy, you can clear all saved data stored on this device
+            — messages, model selection, persona, and conversation history.
+          </p>
+          <button class="danger-button" id="settings-clear-btn" type="button">
+            Clear Site Data
+          </button>
+          <p class="settings-status" id="settings-clear-status">&nbsp;</p>
+        </div>
       </section>
 
       <footer class="qr-footer" id="qr-footer">

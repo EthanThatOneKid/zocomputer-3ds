@@ -573,6 +573,30 @@ button {
   min-height: 1.2em;
 }
 
+.settings-section {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #2c3b52;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.settings-section-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+  color: #8bd3ff;
+}
+
+.settings-section-meta {
+  font-weight: normal;
+  font-size: 0.82em;
+  color: #8190a6;
+}
+
 .search-label {
   display: block;
   margin: 10px 0 4px;
