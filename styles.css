@@ -2,7 +2,8 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background:
+  background-color: #091019;
+  background-image:
     radial-gradient(circle at top, #22314a 0%, #121a27 42%, #091019 100%);
   color: #f4f7fb;
   font: 16px/1.45 Arial, Helvetica, sans-serif;
@@ -37,7 +38,7 @@ button {
 .panel,
 .qr-footer {
   border: 2px solid #2c3b52;
-  background: rgba(18, 27, 39, 0.96);
+  background: #121b27;
 }
 
 .panel {
@@ -345,7 +346,7 @@ button {
 
 .qr-footer {
   border: 2px solid #2c3b52;
-  background: rgba(18, 27, 39, 0.96);
+  background: #121b27;
   margin-bottom: 12px;
   padding: 10px;
 }

@@ -27,6 +27,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    cssMinify: false,
     target: 'es5',
     modulePreload: false,
     rollupOptions: {
