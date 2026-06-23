@@ -43,5 +43,5 @@ npm run dev
 
 ## References
 
-- `https://github.com/EthanThatOneKid/zocomputer-ts`
-- `https://github.com/EthanThatOneKid/3ds-web-skills`
+- <https://github.com/EthanThatOneKid/zocomputer-ts>
+- <https://github.com/EthanThatOneKid/3ds-web-skills>
