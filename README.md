@@ -2,20 +2,13 @@
 
 Simplified demake of the Zo interface for the Nintendo 3DS browser.
 
-## Goal
+## Features
 
-Keep the experience readable, fast, and friendly to 3DS browser limits.
-
-## What this pass adds
-
-- A stronger dashboard-style landing page
-- Large tap targets and stacked sections
-- Minimal ES3-safe JavaScript for chat gating and QR rendering
-- Basic chat, task, and tools panels for the core Zo flow
-- A clickable status bar that opens a QR session dialog
-- ES3-safe browser JS that reads `?key=...` and builds a local QR SVG
-- A fallback prompt for entering an API key before QR generation
-- Playwright browser tests that verify the chat lock, QR flow, and URL key hydration
+- Tabbed single-page layout with large tap targets (320×240 touch-friendly)
+- Chat panel with SSE streaming, conversation management, model/persona selection
+- Status bar with QR session dialog (canvas-based QR encoding)
+- ES5-safe JS targeting Old 3DS browser compatibility
+- API key hydration via `?key=...` URL param
 
 ## Setup (3DS)
 
